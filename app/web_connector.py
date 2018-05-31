@@ -73,8 +73,8 @@ class WebConnector():
         return schedules
 
     def upload_picture(self, file):
-        url = self.domain + "/face_upload"
-        files = {'file':open(file, 'rb')}
+        url = self.domain + "/get_image.jpg"
+        files = {'fileName':open(file, 'rb')}
         r = requests.post(url, files=files)
 
     def get_mp3_file(self):

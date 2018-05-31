@@ -20,3 +20,6 @@ class FirebaseManager():
         playlist = []
         playlist.append(["What is Love?", "TWICE(트와이스)"])
         return playlist
+
+    def get_schedule(self):
+        pass

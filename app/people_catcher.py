@@ -1,7 +1,7 @@
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 import time
 import os, sys
-from app import web_connector as wc
+import web_connector as wc
 
 GPIO.setmode(GPIO.BCM)
 
@@ -45,6 +45,9 @@ def catchPeople():
             if dist <= 150:
                 t = time.time()
                 os.system("raspistill -o "+str(t)+".jpg -t 1")
-                wc.upload_picture(str(t)+".jpg")
+                #wc.upload_picture(str(t)+".jpg")
+            time.sleep(0.2)
     except:
+        print("people_catching exception")
         GPIO.cleanup()
+    

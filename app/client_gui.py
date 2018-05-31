@@ -6,6 +6,7 @@ import datetime
 import time
 import threading
 import web_connector
+import people_catcher as pc
 import ctypes
 
 class SmartMirrorGUI(QWidget):
@@ -13,12 +14,13 @@ class SmartMirrorGUI(QWidget):
         super().__init__()
         self.showFullScreen()
         self.setFixedSize(width, height)
-        print(width)
-        print(height)
         self.setWindowTitle('鏡:Rorrim')
         self.wc = web_connector.WebConnector()
         self.playlist = []
+        self.pc_th = threading.Thread(target=pc.catchPeople)
+        self.pc_th.daemon = True
         self.initUI()
+        self.pc_th.start()
 
     def closeEvent(self, event):
         self.deleteLater()
