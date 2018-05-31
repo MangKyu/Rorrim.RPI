@@ -64,12 +64,8 @@ class WebConnector():
 
         return location
 
-    def get_schedule(self):
-        schedules = []
-        schedules.append(["12:00", "족발먹기"])
-        schedules.append(["14:20", "곱창먹기"])
-        schedules.append(["15:00", "학교가기"])
-
+    def get_schedule(self, uid):
+        schedules = self.fm.get_schedule(uid)
         return schedules
 
     def upload_picture(self, file):

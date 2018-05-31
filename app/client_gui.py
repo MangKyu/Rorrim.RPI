@@ -6,7 +6,6 @@ import datetime
 import time
 import threading
 import web_connector
-import people_catcher as pc
 import ctypes
 
 class SmartMirrorGUI(QWidget):
@@ -17,10 +16,7 @@ class SmartMirrorGUI(QWidget):
         self.setWindowTitle('鏡:Rorrim')
         self.wc = web_connector.WebConnector()
         self.playlist = []
-        self.pc_th = threading.Thread(target=pc.catchPeople)
-        self.pc_th.daemon = True
         self.initUI()
-        self.pc_th.start()
 
     def closeEvent(self, event):
         self.deleteLater()
@@ -123,11 +119,11 @@ class SmartMirrorGUI(QWidget):
         elif weather_info['cur_sky'] == "Snowy":
             img = QPixmap("weather_img/snow.png")
 
-        img.scaledToWidth(10, Qt.FastTransformation)
-        img = img.scaledToWidth(self.width()/100*10)
+        img.scaledToWidth(5, Qt.FastTransformation)
+        img = img.scaledToWidth(self.width()/100*5)
         imgLB.setPixmap(img)
         imgLB.setFixedSize(img.width(), img.height())
-        imgLB.move(self.width()/100, self.height()/100*1)
+        imgLB.move(self.width()/100*2, self.height()/100*1)
         imgLB.setAutoFillBackground(True)
         p = imgLB.palette()
         p.setColor(imgLB.backgroundRole(), Qt.black)
@@ -136,9 +132,9 @@ class SmartMirrorGUI(QWidget):
 
         tempLB = QLabel(str(weather_info['cur_tem'])+"˚C")
         tempLB.setStyleSheet('color: white')
-        tempLB.setFont(QFont("", 60, QFont.Bold))
-        tempLB.setFixedSize(self.width()/100*10, img.height())
-        tempLB.move(self.width()/100*3+img.width(), self.height()/100*1)
+        tempLB.setFont(QFont("", 30, QFont.Bold))
+        tempLB.setFixedSize(self.width()/100*8, img.height())
+        tempLB.move(self.width()/100*2+img.width(), self.height()/100*1)
         tempLB.setAutoFillBackground(True)
         p = tempLB.palette()
         p.setColor(tempLB.backgroundRole(), Qt.black)
@@ -148,9 +144,9 @@ class SmartMirrorGUI(QWidget):
         loc = self.wc.get_location()
         locLB = QLabel(loc)
         locLB.setStyleSheet('color: white')
-        locLB.setFont(QFont("", 40, QFont.Bold))
-        locLB.setFixedSize(self.width()/100*30, self.height()/100*6)
-        locLB.move(self.width()/100*3, self.height()/100*1+img.height())
+        locLB.setFont(QFont("", 20, QFont.Bold))
+        locLB.setFixedSize(self.width()/100*20, self.height()/100*5)
+        locLB.move(self.width()/100, self.height()/100*1+img.height())
         locLB.setAutoFillBackground(True)
         p = locLB.palette()
         p.setColor(locLB.backgroundRole(), Qt.black)
@@ -159,9 +155,9 @@ class SmartMirrorGUI(QWidget):
 
         mmLB = QLabel("▲"+str(weather_info["max_tem"])[:-2]+"˚C ▼"+str(weather_info["min_tem"])[:-2]+"˚C")
         mmLB.setStyleSheet('color: white')
-        mmLB.setFont(QFont("", 40, QFont.Bold))
-        mmLB.setFixedSize(self.width()/100*30, self.height()/100*6)
-        mmLB.move(self.width()/100*3, self.height()/100*7 + img.height())
+        mmLB.setFont(QFont("", 20, QFont.Bold))
+        mmLB.setFixedSize(self.width()/100*20, self.height()/100*5)
+        mmLB.move(self.width()/100, self.height()/100*7 + img.height())
         mmLB.setAutoFillBackground(True)
         p = mmLB.palette()
         p.setColor(mmLB.backgroundRole(), Qt.black)

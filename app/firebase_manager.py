@@ -1,5 +1,6 @@
 import firebase_admin
 from firebase_admin import credentials, db
+import datetime
 
 class FirebaseManager():
 
@@ -11,6 +12,7 @@ class FirebaseManager():
         })
         self.root = db.reference()
         self.weather = self.root.child('weather')
+        self.schedule = self.root.child('calendar')
 
     def get_weather(self):
         weather_data = db.reference('weather'.format(self.weather.key)).get()
@@ -21,5 +23,21 @@ class FirebaseManager():
         playlist.append(["What is Love?", "TWICE(트와이스)"])
         return playlist
 
-    def get_schedule(self):
-        pass
+    def get_schedule(self, uid):
+        dt = datetime.datetime.now()
+        year = str(dt.year)
+        month = str(dt.month)
+        if len(month) == 1:
+            month = "0" + month
+        day = str(dt.day)
+        if len(day) == 1:
+            day = "0" + day
+        sch = self.root.child('calendar').child(uid).child(year+"-"+month+"-"+day)
+        return sch.get()
+
+if __name__ == "__main__":
+    fm = FirebaseManager()
+    uid_a = 'A1rNcfWsplVW6SeK2gdclDZC2R12'
+    uid_b = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
+    data = fm.get_schedule(uid_b, None)
+    print(data)
