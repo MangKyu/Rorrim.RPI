@@ -45,10 +45,14 @@ class SmartMirrorGUI(QWidget):
 
     def initSchedule(self):
         # get schedules from server or google calendar
-        schedules = self.wc.get_schedule()
+        schedules = self.wc.get_schedule('A1rNcfWsplVW6SeK2gdclDZC2R12')
 
-        num_schedules = len(schedules)
+        if schedules is not None:
+            num_schedules = len(schedules)
+        else:
+            num_schedules = 0
 
+        '''
         scheduleLB = []
         for i in range(num_schedules):
             LB = QLabel(schedules[i][0]+" "+schedules[i][1])
@@ -66,6 +70,7 @@ class SmartMirrorGUI(QWidget):
         self.scheduleLB = scheduleLB
         for i in self.scheduleLB:
             self.layout().addChildWidget(i)
+        '''
 
     def initNews(self):
         # get news from server

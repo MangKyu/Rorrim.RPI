@@ -64,8 +64,8 @@ class WebConnector():
 
         return location
 
-    def get_schedule(self, uid):
-        schedules = self.fm.get_schedule(uid)
+    def get_schedule(self, uid=None):
+        schedules = self.fm.get_schedule(uid, "2018-06-05")
         return schedules
 
     def upload_picture(self, file):
@@ -88,7 +88,12 @@ class WebConnector():
 
     def get_playlist(self):
         playlist = []
-
         playlist.append(["What is Love?", "TWICE(트와이스)"])
-
         return self.fm.get_playlist()
+
+    def get_path_test(self):
+        url = "http://map.daum.net/?eX=523953&eY=1084098&eName=카카오판교오피스&sX=517491&sY=1122586&sName=건국대학교"
+        req = requests.get(url)
+        html = req.text
+        print(html)
+

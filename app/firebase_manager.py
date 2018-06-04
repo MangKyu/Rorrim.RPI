@@ -23,7 +23,12 @@ class FirebaseManager():
         playlist.append(["What is Love?", "TWICE(트와이스)"])
         return playlist
 
-    def get_schedule(self, uid):
+    def get_schedule(self, uid=None, date=None):
+        if uid is None:
+            return None
+        if date is not None:
+            sch = self.root.child('calendar').child(uid).child(date)
+            return sch.get()
         dt = datetime.datetime.now()
         year = str(dt.year)
         month = str(dt.month)
@@ -39,5 +44,5 @@ if __name__ == "__main__":
     fm = FirebaseManager()
     uid_a = 'A1rNcfWsplVW6SeK2gdclDZC2R12'
     uid_b = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
-    data = fm.get_schedule(uid_b, None)
+    data = fm.get_schedule(uid_a, "2018-06-05")
     print(data)
