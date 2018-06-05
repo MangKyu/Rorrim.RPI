@@ -1,6 +1,7 @@
 import requests
 import urllib
 from bs4 import BeautifulSoup
+import json
 import firebase_manager
 
 class WebConnector():
@@ -91,9 +92,6 @@ class WebConnector():
         playlist.append(["What is Love?", "TWICE(트와이스)"])
         return self.fm.get_playlist()
 
-    def get_path_test(self):
-        url = "http://map.daum.net/?eX=523953&eY=1084098&eName=카카오판교오피스&sX=517491&sY=1122586&sName=건국대학교"
-        req = requests.get(url)
-        html = req.text
-        print(html)
+    def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885", endY="37.403049076341794"):
+        pass
 
