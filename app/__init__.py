@@ -1,4 +1,4 @@
-from app import client_gui
+import client_gui
 from PyQt5.QtWidgets import *
 import sys
 

@@ -1,6 +1,6 @@
 import threading
-from app import web_connector
-from app import firebase_manager
+import web_connector
+import firebase_manager
 
 
 class Mirror(threading.Thread):

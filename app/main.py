@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 import sys
 import threading
 import time
-from app import mirror
+import mirror
 wc = None
 gui = None
 
