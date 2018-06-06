@@ -1,27 +1,27 @@
 import requests
 import urllib
 from bs4 import BeautifulSoup
-import json
-import firebase_manager
-
+import socket
+import threading
 class WebConnector():
-    def __init__(self):
+    def __init__(self, mirror_uid):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.domain = "http://203.252.166.206:5000"
-        self.fm = firebase_manager.FirebaseManager()
+        self.connect(mirror_uid)
+        wt_th = threading.Thread(target=self.receive_msg)
+        wt_th.daemon = True
+        wt_th.start()
 
-    def get_weather(self):
-        '''
-        url = self.domain + "/get_weather"
-        req = requests.get(url)
-        html = req.text
-        soup = BeautifulSoup(html, 'html.parser')
-        link = soup.findChildren()
+    def connect(self, mirror_uid):
+        host = "203.252.166.206"
+        port = 8099
+        self.sock.connect((host, port))
+        self.sock.send(mirror_uid)
 
-        ret = {}
-        for i in link:
-            ret[i.name] = i.text
-        '''
-        return self.fm.get_weather()
+    def receive_msg(self):
+        while True:
+            msg_dict = self.sock.recv(4096)
+
 
     def get_news(self, category):
         url = self.domain + "/get_news?category=" + category
@@ -65,10 +65,6 @@ class WebConnector():
 
         return location
 
-    def get_schedule(self, uid=None):
-        schedules = self.fm.get_schedule(uid, "2018-06-05")
-        return schedules
-
     def upload_picture(self, file):
         url = self.domain + "/get_image.jpg"
         files = {'fileName':open(file, 'rb')}
@@ -86,11 +82,6 @@ class WebConnector():
                 if not buffer: break
                 data_write = f.write(buffer)
         url_connect.close()
-
-    def get_playlist(self):
-        playlist = []
-        playlist.append(["What is Love?", "TWICE(트와이스)"])
-        return self.fm.get_playlist()
 
     def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885", endY="37.403049076341794"):
         pass

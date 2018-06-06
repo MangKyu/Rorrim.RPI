@@ -4,13 +4,13 @@ import datetime
 
 class FirebaseManager():
 
-    def __init__(self):
+    def __init__(self, mirror_uid):
         cred = credentials.Certificate('Files/Auth/smartmirror-75b89-firebase-adminsdk-vx8is-56d6e1cacc.json')
         #default_app = firebase_admin.initialize_app(cred)
         firebase_admin.initialize_app(cred, {
             'databaseURL' : 'https://smartmirror-75b89.firebaseio.com'
         })
-        self.root = db.reference()
+        self.root = db.reference().child(mirror_uid)
         self.weather = self.root.child('weather')
         self.schedule = self.root.child('calendar')
 

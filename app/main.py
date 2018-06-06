@@ -1,9 +1,9 @@
-import client_gui, web_connector
+from app import client_gui
 from PyQt5.QtWidgets import *
 import sys
 import threading
 import time
-
+from app import mirror
 wc = None
 gui = None
 
@@ -32,7 +32,7 @@ def updateNews():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    wc = web_connector.WebConnector()
+    mirror = mirror.Mirror()
     screen = app.desktop().screenGeometry()
     gui = client_gui.SmartMirrorGUI(screen.width(), screen.height())
 
@@ -44,8 +44,7 @@ if __name__ == "__main__":
     ns_th.daemon = True
     ns_th.start()
 
-    gui.setLocation(wc.get_location())
+    gui.setLocation(mirror.wc.get_location())
 
     gui.show()
     app.exec_()
-    
