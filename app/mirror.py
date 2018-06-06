@@ -4,9 +4,9 @@ import firebase_manager
 
 
 class Mirror(threading.Thread):
-    def __int__(self):
+    def __init__(self):
         threading.Thread.__init__(self)
-        self.mirror_uid = "rorrim1234567890"
+        self.mirror_uid = str("rorrim1234567890")
         self.wc = web_connector.WebConnector(self.mirror_uid)
         self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
 

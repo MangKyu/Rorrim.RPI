@@ -7,16 +7,24 @@ class WebConnector():
     def __init__(self, mirror_uid):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.domain = "http://203.252.166.206:5000"
-        self.connect(mirror_uid)
+        self.mirror_uid = mirror_uid
+        self.connect()
+        self.send_msg(self.mirror_uid)
+        print("Connect to Server Complete")
         wt_th = threading.Thread(target=self.receive_msg)
         wt_th.daemon = True
         wt_th.start()
 
-    def connect(self, mirror_uid):
+    def connect(self):
         host = "203.252.166.206"
         port = 8099
         self.sock.connect((host, port))
-        self.sock.send(mirror_uid)
+        #self.sock.send(str(mirror_uid))
+    
+    def send_msg(self, msg):
+        #msg = str(msg)
+        msg = msg.encode('utf-8')
+        self.sock.send(msg)
 
     def receive_msg(self):
         while True:

@@ -45,6 +45,7 @@ if __name__ == "__main__":
     ns_th.start()
 
     gui.setLocation(mirror.wc.get_location())
+    
 
     gui.show()
     app.exec_()

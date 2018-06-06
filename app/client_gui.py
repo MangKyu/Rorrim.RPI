@@ -5,7 +5,8 @@ from PyQt5.QtCore import *
 import datetime
 import time
 import threading
-from PyQt5 import QtWebEngineWidgets
+#from PyQt5.QtWebEngineWidgets import *
+#from PyQt5 import QtWebEngineWidgets
 
 class SmartMirrorGUI(QWidget):
     def __init__(self, width, height):
@@ -37,13 +38,14 @@ class SmartMirrorGUI(QWidget):
         self.dt_th.start()
 
     def initPath(self):
-        self.webView = QtWebEngineWidgets.QWebEngineView(self)
+        '''self.webView = QtWebEngineWidgets.QWebEngineView(self)
         self.webView.setUrl(QUrl("http://203.252.166.206:5000/getPath?startX=126.9850380932383&startY=37.566567545861645&endX=127.10331814639885&endY=37.403049076341794"))
         self.webView.setFixedSize(self.width()/3, self.width()/3)
         self.webView.move(self.width()/3*2, (self.height()-self.width()/3))
         self.layout().addChildWidget(self.webView)
         self.layout().removeWidget(self.webView)
-
+        '''
+        pass
     def initSchedule(self):
         # get schedules from server or google calendar
         schedules = []
