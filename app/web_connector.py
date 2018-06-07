@@ -7,6 +7,11 @@ class WebConnector:
     def __init__(self):
         self.domain = "http://203.252.166.206:5000"
 
+    def get_weather(self):
+        url = self.domain +"/get_weather"
+        res = requests.get(url)
+        return res.json()
+
     def get_news(self, category):
         url = self.domain + "/get_news?category=" + category
         req = requests.get(url)

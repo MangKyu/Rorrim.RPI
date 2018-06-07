@@ -34,7 +34,7 @@ def updateNews():
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
+    mirror = mirror.Mirror(gui)
     screen = app.desktop().screenGeometry()
     gui = client_gui.SmartMirrorGUI(screen.width(), screen.height())
 
@@ -49,5 +49,5 @@ if __name__ == "__main__":
 
     gui.setLocation(mirror.wc.get_location())
     gui.show()
-    mirror = mirror.Mirror(gui)
+
     app.exec_()

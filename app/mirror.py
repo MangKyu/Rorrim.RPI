@@ -3,15 +3,18 @@ import web_connector
 import firebase_manager
 import socket
 
+
 class Mirror(threading.Thread):
     def __init__(self, gui):
         threading.Thread.__init__(self)
         self.gui = gui
-        self.mirror_uid = "rorrim1234567890"#str("rorrim1234567890")
-        self.wc = web_connector.WebConnector()
-        self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect()
+        self.mirror_uid = "rorrim1234567890"  # str("rorrim1234567890")
+        self.wc = web_connector.WebConnector()
+        self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
+
+        self.init_pi()
 
         recv_th = threading.Thread(target=self.receive_msg)
         recv_th.daemon = True
@@ -24,6 +27,11 @@ class Mirror(threading.Thread):
         self.send_msg(self.mirror_uid)
         print("Connect to Server Complete")
 
+    def init_pi(self):
+        weather_data = self.wc.get_weather()
+        self.gui.setWeather(weather_data)
+
+
     def send_msg(self, msg):
         msg = msg.encode('utf-8')
         self.sock.send(msg)
@@ -33,11 +41,11 @@ class Mirror(threading.Thread):
             msg_dict = self.sock.recv(4096).decode('utf-8')
             msg_protocol = msg_dict['MSG']
             if msg_protocol is '/WEATHER':
+                print(msg_dict['DATA'])
                 self.gui.setWeather(msg_dict['DATA'])
-            elif msg_protocol is 'NEWS':
+            elif msg_protocol is '/NEWS':
                 pass
-                #self.gui.set_weather
-
+                # self.gui.set_weather
 
     def get_weather(self):
         '''
@@ -61,4 +69,3 @@ class Mirror(threading.Thread):
     def get_schedule(self, uid=None):
         schedules = self.fm.get_schedule(uid, "2018-06-05")
         return schedules
-
