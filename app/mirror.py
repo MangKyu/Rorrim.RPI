@@ -3,6 +3,8 @@ import web_connector
 import firebase_manager
 import socket
 import time
+import json
+
 
 class Mirror(threading.Thread):
     def __init__(self, gui):
@@ -12,32 +14,40 @@ class Mirror(threading.Thread):
         self.gui = gui
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect()
-        self.news = self.wc.get_news(self.mirror_uid, self.user_uid)
         self.wc = web_connector.WebConnector()
+        self.news = self.wc.get_news(self.mirror_uid, self.user_uid)
         self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
-
         self.init_pi()
 
     def connect(self):
-        host = "203.252.166.206"
+        host = "172.16.28.163"
+        #host = "203.252.166.206"
         port = 8099
         self.sock.connect((host, port))
-        self.send_msg(self.mirror_uid)
+        msg_dict = self.create_dict('/MUID', self.mirror_uid)
+        self.send_msg(msg_dict)
         print("Connect to Server Complete")
 
     def init_pi(self):
+        weather_data = self.wc.get_weather()
+        self.gui.setWeather(weather_data)
+
         recv_th = threading.Thread(target=self.receive_msg)
         recv_th.daemon = True
         recv_th.start()
-
-        weather_data = self.wc.get_weather()
-        self.gui.setWeather(weather_data)
 
         news_th = threading.Thread(target=self.update_news)
         news_th.daemon = True
         news_th.start()
 
-    def updateNews(self):
+    def create_dict(self, head, body):
+        msg_dict = {
+            'HEAD': head,
+            'BODY': body,
+        }
+        return msg_dict
+
+    def update_news(self):
         index = 0
         while True:
             try:
@@ -50,32 +60,23 @@ class Mirror(threading.Thread):
                 pass
 
     def send_msg(self, msg):
+        msg = json.dumps(msg)
         msg = msg.encode('utf-8')
         self.sock.send(msg)
 
     def receive_msg(self):
         while True:
-            msg_dict = self.sock.recv(4096).decode('utf-8')
-            msg_protocol = msg_dict['MSG']
-            if msg_protocol is '/WEATHER':
-                self.gui.setWeather(msg_dict['DATA'])
-            elif msg_protocol is '/NEWS':
-                pass
-                # self.gui.set_weather
+            head, body = self.analyze_msg()
+            if head == '/WEATHER':
+                self.gui.setWeather(body)
+            elif head == '/NEWS':
+                self.news = self.wc.get_news(self.mirror_uid, self.user_uid)
 
-    def get_weather(self):
-        '''
-        url = self.domain + "/get_weather"
-        req = requests.get(url)
-        html = req.text
-        soup = BeautifulSoup(html, 'html.parser')
-        link = soup.findChildren()
-
-        ret = {}
-        for i in link:
-            ret[i.name] = i.text
-        '''
-        return self.fm.get_weather()
+    def analyze_msg(self):
+        msg = self.sock.recv(4096)
+        msg = msg.decode('utf-8')
+        msg_dict = json.loads(msg)
+        return msg_dict['HEAD'], msg_dict['BODY']
 
     def get_playlist(self):
         playlist = []

@@ -5,14 +5,15 @@ from bs4 import BeautifulSoup
 
 class WebConnector:
     def __init__(self):
-        self.domain = "http://203.252.166.206:5000"
+        #self.domain = "http://203.252.166.206:5000"
+        self.domain = "http://172.16.28.163:5000"
 
     def get_weather(self):
         url = self.domain + "/get_weather"
         res = requests.get(url)
         return res.json()
 
-    def get_news(self,mirror_uid, user_uid):
+    def get_news(self, mirror_uid, user_uid):
         url = self.domain + "/get_news"#?category=" + category
         #req = requests.get(url)
         data_dict ={
@@ -80,3 +81,4 @@ class WebConnector:
     def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885",
                  endY="37.403049076341794"):
         pass
+
