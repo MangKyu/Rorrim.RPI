@@ -8,13 +8,18 @@ class WebConnector:
         self.domain = "http://203.252.166.206:5000"
 
     def get_weather(self):
-        url = self.domain +"/get_weather"
+        url = self.domain + "/get_weather"
         res = requests.get(url)
         return res.json()
 
-    def get_news(self, category):
-        url = self.domain + "/get_news?category=" + category
-        req = requests.get(url)
+    def get_news(self,mirror_uid, user_uid):
+        url = self.domain + "/get_news"#?category=" + category
+        #req = requests.get(url)
+        data_dict ={
+            'mirror_uid': mirror_uid,
+            'user_uid': user_uid
+        }
+        req = requests.post(url=url, data=data_dict)
         html = req.text
         soup = BeautifulSoup(html, 'html.parser')
         link = soup.find_all("news")
