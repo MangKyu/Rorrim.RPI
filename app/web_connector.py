@@ -1,35 +1,11 @@
 import requests
 import urllib
 from bs4 import BeautifulSoup
-import socket
-import threading
-class WebConnector():
-    def __init__(self, mirror_uid):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+
+class WebConnector:
+    def __init__(self):
         self.domain = "http://203.252.166.206:5000"
-        self.mirror_uid = mirror_uid
-        self.connect()
-        self.send_msg(self.mirror_uid)
-        print("Connect to Server Complete")
-        wt_th = threading.Thread(target=self.receive_msg)
-        wt_th.daemon = True
-        wt_th.start()
-
-    def connect(self):
-        host = "203.252.166.206"
-        port = 8099
-        self.sock.connect((host, port))
-        #self.sock.send(str(mirror_uid))
-    
-    def send_msg(self, msg):
-        #msg = str(msg)
-        msg = msg.encode('utf-8')
-        self.sock.send(msg)
-
-    def receive_msg(self):
-        while True:
-            msg_dict = self.sock.recv(4096)
-
 
     def get_news(self, category):
         url = self.domain + "/get_news?category=" + category
@@ -51,20 +27,20 @@ class WebConnector():
         req = requests.get("http://ipconfig.kr")
         html = req.text
         html = html[html.find("IP address : "):].splitlines()[0]
-        html = html[html.find(": ")+2:]
-        html = html[html.find("red> ")+5:html.find("</font>")]
-        #print(html)
+        html = html[html.find(": ") + 2:]
+        html = html[html.find("red> ") + 5:html.find("</font>")]
+        # print(html)
 
-        info = {'query' : html,       # target ip (my ip)
-                'ip' : html}       # my ip
+        info = {'query': html,  # target ip (my ip)
+                'ip': html}  # my ip
 
         with requests.Session() as s:
-            req = s.post('https://후이즈검색.한국/kor.whois.jsc', data = info)
+            req = s.post('https://후이즈검색.한국/kor.whois.jsc', data=info)
             html = req.text
             html = html[html.rfind("[ 네트워크 할당 정보 ]"):]
             html = html[:html.find("우편번호")]
             html = html.splitlines()[-1]
-            html = html[html.find(": ")+2:]
+            html = html[html.find(": ") + 2:]
             html = html.split(" ")
             for i in html:
                 location = location + i + " "
@@ -75,14 +51,14 @@ class WebConnector():
 
     def upload_picture(self, file):
         url = self.domain + "/get_image.jpg"
-        files = {'fileName':open(file, 'rb')}
+        files = {'fileName': open(file, 'rb')}
         r = requests.post(url, files=files)
 
     def get_mp3_file(self):
         url = self.domain + "/download_mp3_file/"
         fileName = 'a.mp3'
         path = 'C:/Users/jaewook/Desktop/'
-        url_request = urllib.request.Request(url+fileName)
+        url_request = urllib.request.Request(url + fileName)
         url_connect = urllib.request.urlopen(url_request)
         with open(path + fileName, 'wb') as f:
             while True:
@@ -91,6 +67,6 @@ class WebConnector():
                 data_write = f.write(buffer)
         url_connect.close()
 
-    def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885", endY="37.403049076341794"):
+    def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885",
+                 endY="37.403049076341794"):
         pass
-
