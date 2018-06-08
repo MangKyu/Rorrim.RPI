@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 import datetime
 import time
 import threading
+import ast
 #from PyQt5.QtWebEngineWidgets import *
 #from PyQt5 import QtWebEngineWidgets
 
@@ -75,6 +76,31 @@ class SmartMirrorGUI(QWidget):
             self.layout().addChildWidget(i)
         '''
 
+    def controlView(self, alarm_dict):
+        activity = list(alarm_dict.keys())[0]
+        flag = self.str_to_bool(alarm_dict[activity])
+        # We have to do => set label enable, disable
+        if activity == 'NewsActivity':
+            self.newsLB.setVisible(flag)
+        elif activity == 'CalendarActivity':
+            pass
+        elif activity == 'PathActivity':
+            pass
+        elif activity == 'MusicActivity':
+            pass
+        elif activity == 'WeatherActivity':
+            self
+        else:
+            pass
+
+    def str_to_bool(self, str):
+        if str == 'true':
+            return True
+        elif str == 'false' or 'False':
+            return False
+        else:
+            return True
+
     def initNews(self):
         # get news from server
 
@@ -88,14 +114,11 @@ class SmartMirrorGUI(QWidget):
         p.setColor(LB.backgroundRole(), Qt.black)
         LB.setPalette(p)
         LB.setAlignment(Qt.AlignVCenter)
-
         self.newsLB = LB
         self.layout().addChildWidget(self.newsLB)
 
     def initWeather(self):
         # get weather information from server or by using api
-
-        #weather_info = self.wc.get_weather()
 
         #if weather_info is None:
         #    return None

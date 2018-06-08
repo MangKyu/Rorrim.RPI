@@ -5,20 +5,29 @@ from bs4 import BeautifulSoup
 
 class WebConnector:
     def __init__(self):
-        #self.domain = "http://203.252.166.206:5000"
-        self.domain = "http://172.16.28.163:5000"
+        self.domain = "http://203.252.166.206:5000"
+        #self.domain = "http://172.16.28.163:5000"
+        #self.domain = "http://192.168.0.126:5000"
+
+    def send_user_info(self, mirror_uid, user_uid):
+        url = self.domain + "/sendUserInfo"
+        user_dict ={
+            'mirror_uid': mirror_uid,
+            'user_uid': user_uid
+        }
+        req = requests.post(url=url, data=user_dict)
+
 
     def get_weather(self):
-        url = self.domain + "/get_weather"
+        url = self.domain + "/getWeather"
         res = requests.get(url)
         return res.json()
 
-    def get_news(self, mirror_uid, user_uid):
-        url = self.domain + "/get_news"#?category=" + category
+    def get_news(self, user_uid):
+        url = self.domain + "/getNews"
         #req = requests.get(url)
-        data_dict ={
-            'mirror_uid': mirror_uid,
-            'user_uid': user_uid
+        data_dict = {
+            'uid': user_uid
         }
         req = requests.post(url=url, data=data_dict)
         html = req.text

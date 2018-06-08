@@ -1,3 +1,4 @@
+'''
 import firebase_admin
 from firebase_admin import credentials, db
 import datetime
@@ -45,4 +46,4 @@ if __name__ == "__main__":
     uid_a = 'A1rNcfWsplVW6SeK2gdclDZC2R12'
     uid_b = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
     data = fm.get_schedule(uid_a, "2018-06-05")
-    print(data)
+    print(data)'''
