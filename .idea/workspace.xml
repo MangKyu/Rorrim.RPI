@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d19366a1-10e6-4bed-8315-0ec53fed4a7f" name="Default" comment="Pi with">
-      <change beforePath="" afterPath="$PROJECT_DIR$/app/speech.py" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/app/face_detector.py" afterPath="$PROJECT_DIR$/app/face_detector.py" />
-      <change beforePath="$PROJECT_DIR$/app/mirror.py" afterPath="$PROJECT_DIR$/app/mirror.py" />
       <change beforePath="$PROJECT_DIR$/app/people_catcher.py" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/app/web_connector.py" afterPath="$PROJECT_DIR$/app/web_connector.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -552,12 +548,18 @@
       <option name="project" value="LOCAL" />
       <updated>1528470261857</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Associate Voice Recognition, Face Detecting =&gt; login, logout Testing">
+      <created>1528545660299</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1528545660299</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-11" y="-11" width="1942" height="1040" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -605,7 +607,8 @@
     <MESSAGE value="Fixed Bugs in News &amp; Weather" />
     <MESSAGE value="News, Weather Complete" />
     <MESSAGE value="get data from server and dynamically update" />
-    <option name="LAST_COMMIT_MESSAGE" value="get data from server and dynamically update" />
+    <MESSAGE value="Associate Voice Recognition, Face Detecting =&gt; login, logout Testing" />
+    <option name="LAST_COMMIT_MESSAGE" value="Associate Voice Recognition, Face Detecting =&gt; login, logout Testing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
