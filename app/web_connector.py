@@ -1,13 +1,24 @@
 import requests
 import urllib
 from bs4 import BeautifulSoup
-
+import os
 
 class WebConnector:
+
     def __init__(self):
         self.domain = "http://203.252.166.206:5000"
-        #self.domain = "http://172.16.28.163:5000"
-        #self.domain = "http://192.168.0.126:5000"
+
+    def login(self, mirror_uid):
+        url = self.domain + "/login"
+        file = os.path.join('Files', 'test.jpg')
+        data = {
+            'mirror_uid': mirror_uid,
+        }
+        files = {
+            'file_name':  open(file, 'rb')
+        }
+        req = requests.post(url=url, data=data, files=files)
+        return req.json()
 
     def send_user_info(self, mirror_uid, user_uid):
         url = self.domain + "/sendUserInfo"
@@ -17,7 +28,6 @@ class WebConnector:
         }
         req = requests.post(url=url, data=user_dict)
 
-
     def get_weather(self):
         url = self.domain + "/getWeather"
         res = requests.get(url)
@@ -25,7 +35,6 @@ class WebConnector:
 
     def get_news(self, user_uid):
         url = self.domain + "/getNews"
-        #req = requests.get(url)
         data_dict = {
             'uid': user_uid
         }
@@ -68,11 +77,6 @@ class WebConnector:
                     break
 
         return location
-
-    def upload_picture(self, file):
-        url = self.domain + "/get_image.jpg"
-        files = {'fileName': open(file, 'rb')}
-        r = requests.post(url, files=files)
 
     def get_mp3_file(self):
         url = self.domain + "/download_mp3_file/"

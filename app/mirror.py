@@ -4,30 +4,37 @@ import firebase_manager
 import socket
 import time
 import json
+from google.cloud import speech
+from google.cloud.speech import enums
+from google.cloud.speech import types
+from app import speech as microphone_stream
+import re
+import sys
+import cv2
+import numpy as np
+import os
+
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 class Mirror(threading.Thread):
+
     def __init__(self, gui):
         threading.Thread.__init__(self)
         self.mirror_uid = "rorrim1234567890"
         self.gui = gui
+        self.flag = True
+        self.cam_flag = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # we have to do => first, user_id should be none and display data and after login we have to set user_uid
-        self.user_uid = "A1rNcfWsplVW6SeK2gdclDZC2R12"
-
+        self.listening()
         # we have to do => after login, socket connect should start
         self.connect()
-
+        self.user_uid = None
+        self.sem = None
         self.wc = web_connector.WebConnector()
         self.news = self.wc.get_news(self.user_uid)
         self.init_pi()
 
-    def login(self):
-        # we have to do => after we get sound data, request login and send face data with user data
-        self.wc.send_user_info(self.mirror_uid, self.user_uid)
-
     def connect(self):
-        #host = '192.168.0.126'
         #host = "172.16.28.163"
         host = "203.252.166.206"
         port = 8099
@@ -37,7 +44,7 @@ class Mirror(threading.Thread):
         print("Connect to Server Complete")
 
     def init_pi(self):
-        self.login()
+        #self.login()
         weather_data = self.wc.get_weather()
         self.gui.setWeather(weather_data)
 
@@ -50,6 +57,12 @@ class Mirror(threading.Thread):
         recv_th.daemon = True
         recv_th.start()
 
+        face_th = threading.Thread(target=self.face_detecting)
+        face_th.daemon = True
+        face_th.start()
+
+        self.sem = threading.Semaphore(0)
+
     def create_dict(self, head, body):
         msg_dict = {
             'HEAD': head,
@@ -59,7 +72,7 @@ class Mirror(threading.Thread):
 
     def update_news(self):
         index = 0
-        while True:
+        while self.flag:
             try:
                 self.gui.setNews(self.news[index][0])
                 index += 1
@@ -76,7 +89,7 @@ class Mirror(threading.Thread):
         self.sock.send(msg)
 
     def receive_msg(self):
-        while True:
+        while self.flag:
             head, body = self.analyze_msg()
             print(head)
             print(body)
@@ -87,7 +100,6 @@ class Mirror(threading.Thread):
             elif head == '/SWITCH':
                 self.gui.controlView(body)
 
-
     def analyze_msg(self):
         try:
             msg = self.sock.recv(4096)
@@ -96,9 +108,24 @@ class Mirror(threading.Thread):
             return msg_dict['HEAD'], msg_dict['BODY']
         except Exception as e:
             # we have to do => here means server socket closed so stop pi or restart pi
+            self.flag = False
             print('Web Server Error')
             print(e)
             pass
+
+    def login_request(self):
+        user_uid = self.wc.login(self.mirror_uid)
+        return user_uid
+
+    def login_success(self):
+        # we have to do here => set alarm flag, category information else after login
+        # put method here!!! to get status from firebase
+        self.wc.send_user_info(self.mirror_uid, self.user_uid)
+
+    def sign_out(self):
+        # we have to do here => set everything false
+        self.user_uid = None
+        self.wc.send_user_info(self.mirror_uid, None)
 
     def get_playlist(self):
         # we have to do  => we have to set playlist
@@ -111,3 +138,127 @@ class Mirror(threading.Thread):
         #schedules = self.fm.get_schedule(uid, "2018-06-05")
         #return schedules
         pass
+
+    def listen_print_loop(self, responses):
+        num_chars_printed = 0
+        for response in responses:
+            if not response.results:
+                continue
+
+            result = response.results[0]
+            if not result.alternatives:
+                continue
+
+            transcript = result.alternatives[0].transcript
+
+            overwrite_chars = ' ' * (num_chars_printed - len(transcript))
+
+            if not result.is_final:  # print string #
+                sys.stdout.write(transcript + overwrite_chars + '\r')
+                sys.stdout.flush()
+
+                num_chars_printed = len(transcript)
+
+            else:
+                print(transcript + overwrite_chars)
+
+                if self.flag is False:
+                    return "EXIT"
+                    break
+                elif re.search(r'\b로그인\b', transcript, re.I):
+                    self.cam_flag = True
+                    self.sem.acquire()
+
+                    user_uid = self.login_request()
+                    if user_uid is not None:
+                        self.login_success()
+                elif re.search(r'\b로그아웃\b', transcript, re.I):
+                    self.sign_out()
+                elif re.search(r'\b노래 틀어줘\b', transcript, re.I):
+                    # we have to do => play music
+                    pass
+                elif re.search(r'\b다음 곡\b', transcript, re.I):
+                    # we have to do => play music
+                    pass
+                elif re.search(r'\b이전 곡\b', transcript, re.I):
+                    # we have to do => play music
+                    pass
+                elif re.search(r'\b길 안내해줘\b', transcript, re.I):
+                    pass
+                elif re.search(r'\b노래 틀어줘\b', transcript, re.I):
+                    pass
+                else:
+                    pass
+
+                num_chars_printed = 0
+
+    def listening(self):
+        language_code = 'ko-KR'  # a BCP-47 language tag
+        RATE = 16000
+        CHUNK = int(RATE / 10)  # 100ms
+
+        client = speech.SpeechClient()
+        config = types.RecognitionConfig(
+            encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=RATE,
+            language_code=language_code)
+        streaming_config = types.StreamingRecognitionConfig(
+            config=config,
+            interim_results=True)
+
+        with microphone_stream(RATE, CHUNK) as stream:
+            while True:
+                audio_generator = stream.generator()
+                requests = (types.StreamingRecognizeRequest(audio_content=content)
+                            for content in audio_generator)
+
+                responses = client.streaming_recognize(streaming_config, requests)
+                try:
+                    ret = self.listen_print_loop(responses)
+                    if ret == "EXIT":
+                        break
+                except:
+                    pass
+
+    def face_detecting(self):
+        face_cascade = cv2.CascadeClassifier("haarcascades/haarcascade_frontalface_alt2.xml")
+        try:
+            cap = cv2.VideoCapture(0)
+        except:
+            print("cam loading failed")
+            return
+
+        while self.cam_flag:
+            ret, frame = cap.read()
+            if not ret:
+                return
+
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.3, 2, 0, (30, 30))
+
+            if len(faces) == 1:
+                start_x = faces[0][0] - int(faces[0][2] * 0.3)
+                end_x = faces[0][0] + int(faces[0][2] * 1.3)
+                start_y = faces[0][1] - int(faces[0][3] * 0.3)
+                end_y = faces[0][1] + int(faces[0][3] * 1.3)
+                if start_x < 0:
+                    start_x = 0
+                if start_y < 0:
+                    start_y = 0
+                if end_x >= len(frame[0]):
+                    end_x = len(frame[0])
+                if end_y >= len(frame):
+                    end_y = len(frame)
+
+                if end_x - start_x >= 100 and end_y - start_y >= 100:
+                    f = frame[start_y:end_y, start_x:end_x]
+                    try:
+                        file_path = os.path.join('Files', 'image.jpg')
+                    except Exception as e:
+                        os.makedirs(file_path)
+                    finally:
+                        cv2.imwrite(file_path, f)
+                        self.sem.release()
+                        self.cam_flag = False
+        cap.release()
+        cv2.destroyAllWindows()
