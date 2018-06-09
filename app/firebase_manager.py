@@ -1,4 +1,3 @@
-'''
 import firebase_admin
 from firebase_admin import credentials, db
 import datetime
@@ -13,7 +12,6 @@ class FirebaseManager():
         })
         self.root = db.reference().child(mirror_uid)
         self.weather = self.root.child('weather')
-        self.schedule = self.root.child('calendar')
 
     def get_weather(self):
         weather_data = db.reference('weather'.format(self.weather.key)).get()
@@ -28,7 +26,7 @@ class FirebaseManager():
         if uid is None:
             return None
         if date is not None:
-            sch = self.root.child('calendar').child(uid).child(date)
+            sch = self.root.child('user').child(uid).child('calendar').child(date)
             return sch.get()
         dt = datetime.datetime.now()
         year = str(dt.year)
@@ -38,12 +36,11 @@ class FirebaseManager():
         day = str(dt.day)
         if len(day) == 1:
             day = "0" + day
-        sch = self.root.child('calendar').child(uid).child(year+"-"+month+"-"+day)
+        sch = self.root.child('user').child(uid).child('calendar').child(year+"-"+month+"-"+day)
         return sch.get()
 
-if __name__ == "__main__":
-    fm = FirebaseManager()
-    uid_a = 'A1rNcfWsplVW6SeK2gdclDZC2R12'
-    uid_b = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
-    data = fm.get_schedule(uid_a, "2018-06-05")
-    print(data)'''
+    def get_onoff(self, uid=None):
+        if uid is None:
+            return None
+        onoff = self.root.child('user').child(uid).child('status')
+        return onoff.get()

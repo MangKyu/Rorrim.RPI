@@ -7,7 +7,7 @@ import json
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
-from app import speech as microphone_stream
+from speech import MicrophoneStream as microphone_stream
 import re
 import sys
 import cv2
@@ -16,7 +16,7 @@ import os
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
-class Mirror(threading.Thread):
+class Mirror():
 
     def __init__(self, gui):
         threading.Thread.__init__(self)
@@ -25,7 +25,9 @@ class Mirror(threading.Thread):
         self.flag = True
         self.cam_flag = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.listening()
+        speech_th = threading.Thread(target=self.listening)
+        speech_th.daemon = True
+        speech_th.start()
         # we have to do => after login, socket connect should start
         self.connect()
         self.user_uid = None
@@ -118,9 +120,9 @@ class Mirror(threading.Thread):
         return user_uid
 
     def login_success(self):
-        # we have to do here => set alarm flag, category information else after login
-        # put method here!!! to get status from firebase
         self.wc.send_user_info(self.mirror_uid, self.user_uid)
+        onoff = self.fm.get_onoff()
+        print(onoff)
 
     def sign_out(self):
         # we have to do here => set everything false
@@ -168,9 +170,8 @@ class Mirror(threading.Thread):
                 elif re.search(r'\b로그인\b', transcript, re.I):
                     self.cam_flag = True
                     self.sem.acquire()
-
-                    user_uid = self.login_request()
-                    if user_uid is not None:
+                    self.user_uid = self.login_request()
+                    if self.user_uid is not None:
                         self.login_success()
                 elif re.search(r'\b로그아웃\b', transcript, re.I):
                     self.sign_out()
@@ -196,12 +197,12 @@ class Mirror(threading.Thread):
         language_code = 'ko-KR'  # a BCP-47 language tag
         RATE = 16000
         CHUNK = int(RATE / 10)  # 100ms
-
         client = speech.SpeechClient()
         config = types.RecognitionConfig(
             encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
             sample_rate_hertz=RATE,
             language_code=language_code)
+
         streaming_config = types.StreamingRecognitionConfig(
             config=config,
             interim_results=True)
@@ -217,7 +218,8 @@ class Mirror(threading.Thread):
                     ret = self.listen_print_loop(responses)
                     if ret == "EXIT":
                         break
-                except:
+                except Exception as e:
+                    print(e)
                     pass
 
     def face_detecting(self):
@@ -228,37 +230,37 @@ class Mirror(threading.Thread):
             print("cam loading failed")
             return
 
-        while self.cam_flag:
-            ret, frame = cap.read()
-            if not ret:
-                return
+        while True:
+            while self.cam_flag:
+                ret, frame = cap.read()
+                if not ret:
+                    return
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray, 1.3, 2, 0, (30, 30))
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, 1.3, 2, 0, (30, 30))
+                if len(faces) == 1:
+                    start_x = faces[0][0] - int(faces[0][2] * 0.3)
+                    end_x = faces[0][0] + int(faces[0][2] * 1.3)
+                    start_y = faces[0][1] - int(faces[0][3] * 0.3)
+                    end_y = faces[0][1] + int(faces[0][3] * 1.3)
+                    if start_x < 0:
+                        start_x = 0
+                    if start_y < 0:
+                        start_y = 0
+                    if end_x >= len(frame[0]):
+                        end_x = len(frame[0])
+                    if end_y >= len(frame):
+                        end_y = len(frame)
 
-            if len(faces) == 1:
-                start_x = faces[0][0] - int(faces[0][2] * 0.3)
-                end_x = faces[0][0] + int(faces[0][2] * 1.3)
-                start_y = faces[0][1] - int(faces[0][3] * 0.3)
-                end_y = faces[0][1] + int(faces[0][3] * 1.3)
-                if start_x < 0:
-                    start_x = 0
-                if start_y < 0:
-                    start_y = 0
-                if end_x >= len(frame[0]):
-                    end_x = len(frame[0])
-                if end_y >= len(frame):
-                    end_y = len(frame)
-
-                if end_x - start_x >= 100 and end_y - start_y >= 100:
-                    f = frame[start_y:end_y, start_x:end_x]
-                    try:
-                        file_path = os.path.join('Files', 'image.jpg')
-                    except Exception as e:
-                        os.makedirs(file_path)
-                    finally:
-                        cv2.imwrite(file_path, f)
-                        self.sem.release()
-                        self.cam_flag = False
+                    if end_x - start_x >= 100 and end_y - start_y >= 100:
+                        f = frame[start_y:end_y, start_x:end_x]
+                        try:
+                            file_path = os.path.join('Files', 'test.jpg')
+                        except Exception as e:
+                            os.makedirs(file_path)
+                        finally:
+                            cv2.imwrite(file_path, f)
+                            self.sem.release()
+                            self.cam_flag = False
         cap.release()
         cv2.destroyAllWindows()
