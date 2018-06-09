@@ -3,8 +3,15 @@ from __future__ import division
 import re
 import sys
 
+from google.cloud import speech
+from google.cloud.speech import enums
+from google.cloud.speech import types
 import pyaudio
 from six.moves import queue
+
+
+RATE = 16000
+CHUNK = int(RATE / 10)  # 100ms
 
 class MicrophoneStream(object):
     """Opens a recording stream as a generator yielding the audio chunks."""
@@ -87,3 +94,34 @@ def listen_print_loop(responses):
                 break
 
             num_chars_printed = 0
+
+
+def main():
+    language_code = 'ko-KR'  # a BCP-47 language tag
+
+    client = speech.SpeechClient()
+    config = types.RecognitionConfig(
+        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=RATE,
+        language_code=language_code)
+    streaming_config = types.StreamingRecognitionConfig(
+        config=config,
+        interim_results=True)
+
+    with MicrophoneStream(RATE, CHUNK) as stream:
+        while True:
+            audio_generator = stream.generator()
+            requests = (types.StreamingRecognizeRequest(audio_content=content)
+                        for content in audio_generator)
+
+            responses = client.streaming_recognize(streaming_config, requests)
+            try:
+                ret = listen_print_loop(responses)
+                if ret == "EXIT":
+                    break
+            except:
+                pass
+
+
+if __name__ == '__main__':
+    main()
