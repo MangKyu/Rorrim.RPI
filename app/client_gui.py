@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtWebKitWidgets import *
 import datetime
 import time
 import threading
@@ -39,42 +40,42 @@ class SmartMirrorGUI(QWidget):
         self.dt_th.start()
 
     def initPath(self):
-        '''self.webView = QtWebEngineWidgets.QWebEngineView(self)
+        self.webView = QWebView()
         self.webView.setUrl(QUrl("http://203.252.166.206:5000/getPath?startX=126.9850380932383&startY=37.566567545861645&endX=127.10331814639885&endY=37.403049076341794"))
-        self.webView.setFixedSize(self.width()/3, self.width()/3)
-        self.webView.move(self.width()/3*2, (self.height()-self.width()/3))
+        self.webView.page().mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff)
+        self.webView.page().mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff)
+        self.webView.setFixedSize(self.width()/100*29, self.width()/100*29)
+        self.webView.setZoomFactor(self.webView.width()/500)
+        self.webView.move(self.width()-self.webView.width(), self.height()-self.webView.height())
         self.layout().addChildWidget(self.webView)
-        self.layout().removeWidget(self.webView)
-        '''
-        pass
+
     def initSchedule(self):
         # get schedules from server or google calendar
-        schedules = []
+        self.scheWidget = QWidget()
+        vlayout = QVBoxLayout()
+        self.scheWidget.setLayout(vlayout)
 
-        if schedules is not None:
-            num_schedules = len(schedules)
-        else:
-            num_schedules = 0
+        self.scheLB = [QLabel("1"), QLabel("2"), QLabel("3")]
+        
+        for i in range(3):
+            #self.scheLB[i] = QLabel("hihi")
+            self.scheLB[i].setStyleSheet('color: white')
+            self.scheLB[i].setFont(QFont("", 20, QFont.Bold))
+            self.scheLB[i].setFixedSize(self.width()/100*40, self.height()/100*6)
+            self.scheLB[i].move(self.width()/100, self.height()/100*(76+i*6))
+            self.scheLB[i].setAutoFillBackground(True)
+            p = self.scheLB[i].palette()
+            p.setColor(self.scheLB[i].backgroundRole(), Qt.black)
+            self.scheLB[i].setPalette(p)
+            self.scheLB[i].setAlignment(Qt.AlignVCenter)
+            self.scheWidget.layout().addChildWidget(self.scheLB[i])
 
-        '''
-        scheduleLB = []
-        for i in range(num_schedules):
-            LB = QLabel(schedules[i][0]+" "+schedules[i][1])
-            LB.setStyleSheet('color: white')
-            LB.setFont(QFont("", 25, QFont.Bold))
-            LB.setFixedSize(self.width()/100*40, self.height()/100*6)
-            LB.move(self.width()/100, self.height()/100*(94-(num_schedules-i)*6))
-            LB.setAutoFillBackground(True)
-            p = LB.palette()
-            p.setColor(LB.backgroundRole(), Qt.black)
-            LB.setPalette(p)
-            LB.setAlignment(Qt.AlignVCenter)
-            scheduleLB.append(LB)
-
-        self.scheduleLB = scheduleLB
-        for i in self.scheduleLB:
-            self.layout().addChildWidget(i)
-        '''
+        #self.scheWidget.setVisible(True)
+        self.layout().addChildWidget(self.scheWidget)
+        self.layout().addChildWidget(self.scheLB[0])
+        self.layout().addChildWidget(self.scheLB[1])
+        self.layout().addChildWidget(self.scheLB[2])
+        
 
     def controlView(self, alarm_dict):
         activity = list(alarm_dict.keys())[0]
@@ -83,13 +84,16 @@ class SmartMirrorGUI(QWidget):
         if activity == 'NewsActivity':
             self.newsLB.setVisible(flag)
         elif activity == 'CalendarActivity':
-            pass
+            self.scheLB[0].setVisible(flag)
+            self.scheLB[1].setVisible(flag)
+            self.scheLB[2].setVisible(flag)
         elif activity == 'PathActivity':
-            pass
+            self.webView.setVisible(flag)
         elif activity == 'MusicActivity':
-            pass
+            self.musicLB[0].setVisible(flag)
+            self.musicLB[1].setVisible(flag)
         elif activity == 'WeatherActivity':
-            self
+            self.weatherWidget.setVisible(flag)
         else:
             pass
 
@@ -124,6 +128,10 @@ class SmartMirrorGUI(QWidget):
         #    return None
 
         dt = datetime.datetime.now()
+
+        self.weatherWidget = QWidget()
+        vlayout = QVBoxLayout()
+        self.weatherWidget.setLayout(vlayout)
 
         self.imgLB = QLabel()
         img = QPixmap("weather_img/sunny-day.png")
@@ -196,11 +204,11 @@ class SmartMirrorGUI(QWidget):
         self.mmLB.setPalette(p)
         self.mmLB.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
 
-        self.layout().addChildWidget(self.imgLB)
-        self.layout().addChildWidget(self.tempLB)
-        self.layout().addChildWidget(self.locLB)
-        self.layout().addChildWidget(self.mmLB)
-
+        self.weatherWidget.layout().addChildWidget(self.imgLB)
+        self.weatherWidget.layout().addChildWidget(self.tempLB)
+        self.weatherWidget.layout().addChildWidget(self.locLB)
+        self.weatherWidget.layout().addChildWidget(self.mmLB)
+        self.layout().addChildWidget(self.weatherWidget)
 
     def initMusic(self):
         # get music file or information
