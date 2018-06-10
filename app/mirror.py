@@ -19,11 +19,12 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 class Mirror():
 
     def __init__(self, gui):
-        threading.Thread.__init__(self)
         self.mirror_uid = "rorrim1234567890"
         self.gui = gui
         self.flag = True
         self.cam_flag = False
+        self.auth_flag = False
+        self.timer_flag = False
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         speech_th = threading.Thread(target=self.listening)
         speech_th.daemon = True
@@ -33,12 +34,13 @@ class Mirror():
         self.user_uid = None
         self.sem = None
         self.wc = web_connector.WebConnector()
+        self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
         self.news = self.wc.get_news(self.user_uid)
         self.init_pi()
 
     def connect(self):
         #host = "172.16.28.163"
-        host = "203.252.166.206"
+        host = "sd100.iptime.org"
         port = 8099
         self.sock.connect((host, port))
         msg_dict = self.create_dict('/MUID', self.mirror_uid)
@@ -101,6 +103,26 @@ class Mirror():
                 self.news = self.wc.get_news(self.user_uid)
             elif head == '/SWITCH':
                 self.gui.controlView(body)
+            elif head =='/AUTH':
+                self.auth_flag = False
+                self.timer_flag = True
+                auth_dict = self.authenticate()
+                self.send_msg(auth_dict)
+                print('send auth to server')
+                print(self.auth_flag)
+                # we have to do => show auth view
+            else:
+                pass
+
+    def authenticate(self):
+        start = time.time()
+        while self.timer_flag:
+            end = time.time()
+            if end - start >= 10:
+                self.timer_flag = False
+        auth_dict=self.create_dict('/AUTH', self.auth_flag)
+        return auth_dict
+            
 
     def analyze_msg(self):
         try:
@@ -121,8 +143,30 @@ class Mirror():
 
     def login_success(self):
         self.wc.send_user_info(self.mirror_uid, self.user_uid)
+        print(self.user_uid)
         onoff = self.fm.get_onoff()
-        print(onoff)
+        if onoff is None or type(onoff) is not dict:
+            print("onoff : ", end="")
+            print(onoff)
+            return
+        for i in onoff:
+            if i is "NewsActivity":
+                self.news = self.wc.get_news(self.user_uid)
+                self.gui.newsLB.setVisible(onoff[i])
+            elif i is "PathActivity":
+                self.gui.webView.setVisible(onoff[i])
+            elif i is "WeatherActivity":
+                self.gui.weatherWidget.setVisible(onoff[i])
+            elif i is "CalendarActivity":
+                sche = self.get_schedule()
+                if sche is not None and len(sche) >= 1:
+                    pass
+                self.gui.scheLB[0].setVisible(onoff[i])
+                self.gui.scheLB[1].setVisible(onoff[i])
+                self.gui.scheLB[2].setVisible(onoff[i])
+            elif i is "MusicActivity":
+                self.gui.musicLB[0].setVisible(onoff[i])
+                self.gui.musicLB[1].setVisible(onoff[i])
 
     def sign_out(self):
         # we have to do here => set everything false
@@ -136,10 +180,8 @@ class Mirror():
         #return self.fm.get_playlist()
 
     def get_schedule(self, uid=None):
-        # we have to do  => we have to set schedule
-        #schedules = self.fm.get_schedule(uid, "2018-06-05")
-        #return schedules
-        pass
+        schedules = self.fm.get_schedule(self.user_uid)
+        return schedules
 
     def listen_print_loop(self, responses):
         num_chars_printed = 0
@@ -188,6 +230,11 @@ class Mirror():
                     pass
                 elif re.search(r'\b노래 틀어줘\b', transcript, re.I):
                     pass
+                elif re.search(r'\b등록\b', transcript, re.I):
+                    if self.timer_flag is True:
+                        self.auth_flag = True
+                        self.timer_flag = False
+                        print('auth_flag true in sound')
                 else:
                     pass
 

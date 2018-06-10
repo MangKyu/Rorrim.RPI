@@ -6,7 +6,7 @@ import os
 class WebConnector:
 
     def __init__(self):
-        self.domain = "http://203.252.166.206:5000"
+        self.domain = "http://sd100.iptime.org:5000"
 
     def login(self, mirror_uid):
         url = self.domain + "/login"
@@ -35,6 +35,8 @@ class WebConnector:
 
     def get_news(self, user_uid):
         url = self.domain + "/getNews"
+        if user_uid is None:
+            user_uid = "None"
         data_dict = {
             'uid': user_uid
         }

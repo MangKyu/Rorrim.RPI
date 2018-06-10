@@ -26,21 +26,41 @@ class FirebaseManager():
         if uid is None:
             return None
         if date is not None:
-            sch = self.root.child('user').child(uid).child('calendar').child(date)
+            sch = db.reference().child('user').child(uid).child('calendar').child(date)
             return sch.get()
         dt = datetime.datetime.now()
         year = str(dt.year)
         month = str(dt.month)
-        if len(month) == 1:
-            month = "0" + month
         day = str(dt.day)
         if len(day) == 1:
             day = "0" + day
-        sch = self.root.child('user').child(uid).child('calendar').child(year+"-"+month+"-"+day)
+        sch = db.reference().child('user').child(uid).child('calendar').child(month+"월 "+day+"일")
         return sch.get()
 
     def get_onoff(self, uid=None):
         if uid is None:
             return None
-        onoff = self.root.child('user').child(uid).child('status')
+        onoff = db.reference().child('user').child(uid).child('status')
         return onoff.get()
+
+    def get_audio(self, uid=None):
+        if uid is None:
+            return None
+        audio = db.reference().child('user').child(uid).child('audio')
+        return audio.get()
+
+    def get_location(self, uid=None):
+        if uid is None:
+            return None
+        location = db.reference().child('user').child(uid).child('location')
+        return location.get()
+
+    def get_category(self, uid=None):
+        if uid is None:
+            return None
+        category = db.reference().child('user').child(uid).child('category')
+        return category.get()
+
+if __name__ == "__main__":
+    fm = FirebaseManager("rorrim1234567890")
+    print(fm.get_schedule("A1rNcfWsplVW6SeK2gdclDZC2R12", "6월 14일"))

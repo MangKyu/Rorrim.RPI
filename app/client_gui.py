@@ -48,6 +48,7 @@ class SmartMirrorGUI(QWidget):
         self.webView.setZoomFactor(self.webView.width()/500)
         self.webView.move(self.width()-self.webView.width(), self.height()-self.webView.height())
         self.layout().addChildWidget(self.webView)
+        self.webView.setVisible(False)
 
     def initSchedule(self):
         # get schedules from server or google calendar
@@ -69,6 +70,7 @@ class SmartMirrorGUI(QWidget):
             self.scheLB[i].setPalette(p)
             self.scheLB[i].setAlignment(Qt.AlignVCenter)
             self.scheWidget.layout().addChildWidget(self.scheLB[i])
+            self.scheLB[i].setVisible(False)
 
         #self.scheWidget.setVisible(True)
         self.layout().addChildWidget(self.scheWidget)
@@ -248,6 +250,8 @@ class SmartMirrorGUI(QWidget):
         self.musicLB = musicLB
         self.layout().addChildWidget(self.musicLB[0])
         self.layout().addChildWidget(self.musicLB[1])
+        self.musicLB[0].setVisible(False)
+        self.musicLB[1].setVisible(False)
 
     def initDatetime(self):
         dt = datetime.datetime.now()
