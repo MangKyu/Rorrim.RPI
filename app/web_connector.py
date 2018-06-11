@@ -2,6 +2,7 @@ import requests
 import urllib
 from bs4 import BeautifulSoup
 import os
+import json
 
 class WebConnector:
 
@@ -51,6 +52,15 @@ class WebConnector:
             ret.append([i.title.text, i.content.text])
 
         return ret
+
+    def get_geocode(self, place):
+        api_url = "https://maps.googleapis.com/maps/api/geocode/json?address="+place+"&key=AIzaSyAnuRGIRSK9MWOKjsKFvjvLrTOUyU7e9DU"
+        req = requests.get(api_url)
+        if req.status_code == 200:
+            data = json.loads(req.text)
+            if data is not None and data['results'] is not None:
+                return data['results'][0]['geometry']['location']
+        return None
 
     def get_location(self):
         location = ""

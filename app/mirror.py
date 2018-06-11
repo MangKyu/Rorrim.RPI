@@ -143,35 +143,28 @@ class Mirror():
 
     def login_success(self):
         self.wc.send_user_info(self.mirror_uid, self.user_uid)
-        print(self.user_uid)
-        onoff = self.fm.get_onoff()
+        self.user_uid = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
+        loc = self.fm.get_location(self.user_uid)
+        loc = {'latitude':'37.5436631', 'longitude':'127.0773105'}
+        self.gui.setStartPoint(loc)
+        #print(self.user_uid)
+        onoff = self.fm.get_onoff(self.user_uid)
         if onoff is None or type(onoff) is not dict:
             print("onoff : ", end="")
             print(onoff)
             return
-        for i in onoff:
-            if i is "NewsActivity":
-                self.news = self.wc.get_news(self.user_uid)
-                self.gui.newsLB.setVisible(onoff[i])
-            elif i is "PathActivity":
-                self.gui.webView.setVisible(onoff[i])
-            elif i is "WeatherActivity":
-                self.gui.weatherWidget.setVisible(onoff[i])
-            elif i is "CalendarActivity":
-                sche = self.get_schedule()
-                if sche is not None and len(sche) >= 1:
-                    pass
-                self.gui.scheLB[0].setVisible(onoff[i])
-                self.gui.scheLB[1].setVisible(onoff[i])
-                self.gui.scheLB[2].setVisible(onoff[i])
-            elif i is "MusicActivity":
-                self.gui.musicLB[0].setVisible(onoff[i])
-                self.gui.musicLB[1].setVisible(onoff[i])
+        for key in onoff:
+            self.gui.controlView({key:onoff[key]})
 
     def sign_out(self):
         # we have to do here => set everything false
         self.user_uid = None
         self.wc.send_user_info(self.mirror_uid, None)
+        self.gui.controlView({"NewsActivity":"true"})
+        self.gui.controlView({"PathActivity":"false"})
+        self.gui.controlView({"WeatherActivity":"true"})
+        self.gui.controlView({"CalendarActivity":"false"})
+        self.gui.controlView({"MusicActivity":"false"})
 
     def get_playlist(self):
         # we have to do  => we have to set playlist
@@ -226,10 +219,10 @@ class Mirror():
                 elif re.search(r'\b이전 곡\b', transcript, re.I):
                     # we have to do => play music
                     pass
-                elif re.search(r'\b길 안내해줘\b', transcript, re.I):
-                    pass
-                elif re.search(r'\b노래 틀어줘\b', transcript, re.I):
-                    pass
+                elif re.search(r'\b가는 길\b', transcript, re.I) or re.search(r'\b가는길\b', transcript, re.I):
+                    place = transcript[:re.search(r'\b가는\b', transcript, re.I).span()[0]]
+                    geocode = self.wc.get_geocode(place)
+                    self.gui.setPath(geocode)
                 elif re.search(r'\b등록\b', transcript, re.I):
                     if self.timer_flag is True:
                         self.auth_flag = True

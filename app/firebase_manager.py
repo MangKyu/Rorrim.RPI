@@ -61,6 +61,3 @@ class FirebaseManager():
         category = db.reference().child('user').child(uid).child('category')
         return category.get()
 
-if __name__ == "__main__":
-    fm = FirebaseManager("rorrim1234567890")
-    print(fm.get_schedule("A1rNcfWsplVW6SeK2gdclDZC2R12", "6월 14일"))

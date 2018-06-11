@@ -13,6 +13,11 @@ import ast
 class SmartMirrorGUI(QWidget):
     def __init__(self, width, height):
         super().__init__()
+        self.startX = ""
+        self.startY = ""
+        self.endX = ""
+        self.endY = ""
+        self.webView = None
         self.showFullScreen()
         self.setFixedSize(width, height)
         self.setWindowTitle('鏡:Rorrim')
@@ -40,15 +45,23 @@ class SmartMirrorGUI(QWidget):
         self.dt_th.start()
 
     def initPath(self):
-        self.webView = QWebView()
-        self.webView.setUrl(QUrl("http://203.252.166.206:5000/getPath?startX=126.9850380932383&startY=37.566567545861645&endX=127.10331814639885&endY=37.403049076341794"))
+        self.webView = QWebView(self)
+        self.webView.setUrl(QUrl("http://sd100.iptime.org:5000/getPath"))
         self.webView.page().mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff)
         self.webView.page().mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff)
         self.webView.setFixedSize(self.width()/100*29, self.width()/100*29)
         self.webView.setZoomFactor(self.webView.width()/500)
         self.webView.move(self.width()-self.webView.width(), self.height()-self.webView.height())
         self.layout().addChildWidget(self.webView)
-        self.webView.setVisible(False)
+        self.webView.setVisible(True)
+        self.sld = QSlider()
+        self.sldvalue = 1
+        self.sld.setValue(self.sldvalue)
+        self.sld.valueChanged.connect(self.getPath)
+
+    def setStartPoint(self, point):
+        self.startX = point['longitude']
+        self.startY = point['latitude']
 
     def initSchedule(self):
         # get schedules from server or google calendar
@@ -90,7 +103,8 @@ class SmartMirrorGUI(QWidget):
             self.scheLB[1].setVisible(flag)
             self.scheLB[2].setVisible(flag)
         elif activity == 'PathActivity':
-            self.webView.setVisible(flag)
+            if self.webView is not None:
+                self.webView.setVisible(flag)
         elif activity == 'MusicActivity':
             self.musicLB[0].setVisible(flag)
             self.musicLB[1].setVisible(flag)
@@ -137,28 +151,6 @@ class SmartMirrorGUI(QWidget):
 
         self.imgLB = QLabel()
         img = QPixmap("weather_img/sunny-day.png")
-        """
-        if weather_info['cur_sky'] == "Sunny":
-            if dt.hour >= 6 and dt.hour <= 20:
-                img = QPixmap("weather_img/sunny-day.png")
-            else:
-                img = QPixmap("weather_img/sunny-night.png")
-        elif weather_info['cur_sky'] == "Cloudy":
-            if dt.hour >= 6 and dt.hour <= 20:
-                img = QPixmap("weather_img/cloudy-day.png")
-            else:
-                img = QPixmap("weather_img/cloudy-night.png")
-        elif weather_info['cur_sky'] == "Very Cloudy":
-            img = QPixmap("weather_img/cloudy-many.png")
-        elif weather_info['cur_sky'] == "Foggy":
-            img = QPixmap("weather_img/cloudy-so-much.png")
-        elif weather_info['cur_sky'] == "Rainy":
-            img = QPixmap("weather_img/rainy.png")
-        elif weather_info['cur_sky'] == "rain with snow":
-            img = QPixmap("weather_img/rainy-snow.png")
-        elif weather_info['cur_sky'] == "Snowy":
-            img = QPixmap("weather_img/snow.png")
-        """
         img.scaledToWidth(5, Qt.FastTransformation)
         img = img.scaledToWidth(self.width()/100*5)
         self.imgLB.setPixmap(img)
@@ -354,3 +346,16 @@ class SmartMirrorGUI(QWidget):
                 time.sleep(1)
             except:
                 break
+
+    def setPath(self, point):
+        self.endY = point['lat']
+        self.endX = point['lng']
+        self.sldvalue += 1
+        if self.sldvalue == 100:
+            sldvalue = 1
+        self.sld.setValue(self.sldvalue)
+
+    def getPath(self):
+        self.webView.setUrl(QUrl("http://sd100.iptime.org:5000/getPath?startX="+str(self.startX)+"&startY="+str(self.startY)+"&endX="+str(self.endX)+"&endY="+str(self.endY)))
+        self.webView.setVisible(True)
+
