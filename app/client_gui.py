@@ -34,6 +34,7 @@ class SmartMirrorGUI(QWidget):
         self.setPalette(p)
         vlayout = QVBoxLayout()
         self.setLayout(vlayout)
+        self.initInfo()
         self.initDatetime()
         self.initSchedule()
         self.initNews()
@@ -44,12 +45,44 @@ class SmartMirrorGUI(QWidget):
         self.dt_th.daemon = True
         self.dt_th.start()
 
+    def initInfo(self):
+        self.infoLB = QLabel("Welcome, I'm Rorrim")
+        self.infoLB.setStyleSheet('color: white')
+        self.infoLB.setFont(QFont("", 45, QFont.Bold))
+        self.infoLB.setFixedSize(self.width(), self.height()/100*30)
+        self.infoLB.move(self.width()/100*0, self.height()/100*35)
+        self.infoLB.setAutoFillBackground(True)
+        p = self.infoLB.palette()
+        p.setColor(self.infoLB.backgroundRole(), Qt.black)
+        self.infoLB.setPalette(p)
+        self.infoLB.setAlignment(Qt.AlignCenter)
+        self.layout().addChildWidget(self.infoLB)
+        self.infoLB.setVisible(True)
+
+    def setInfo(self, info_num, text=None):
+        if info_num == 0:
+            self.infoLB.setText("")
+        elif info_num == 1:   #welcome
+            self.infoLB.setText("Welcome, I'm Rorrim")
+        elif info_num == 2: #trying to login
+            self.infoLB.setText("얼굴인식 시도 중")
+        elif info_num == 3: #login success
+            self.infoLB.setText(text+", 안녕하세요")
+        elif info_num == 4:
+            self.infoLB.setText(text+", 안녕히 가세요")
+        elif info_num == 5:
+            self.infoLB.setText("길찾기 시도 중: "+text)
+        elif info_num == 6:
+            self.infoLB.setText("길찾기 완료")
+        elif info_num == 7:
+            self.infoLB.setText("길찾기 정보 없음")
+
     def initPath(self):
         self.webView = QWebView(self)
         self.webView.setUrl(QUrl("http://sd100.iptime.org:5000/getPath"))
         self.webView.page().mainFrame().setScrollBarPolicy(Qt.Vertical, Qt.ScrollBarAlwaysOff)
         self.webView.page().mainFrame().setScrollBarPolicy(Qt.Horizontal, Qt.ScrollBarAlwaysOff)
-        self.webView.setFixedSize(self.width()/100*29, self.width()/100*29)
+        self.webView.setFixedSize(self.width()/100*26, self.width()/100*26)
         self.webView.setZoomFactor(self.webView.width()/500)
         self.webView.move(self.width()-self.webView.width(), self.height()-self.webView.height())
         self.layout().addChildWidget(self.webView)
@@ -65,32 +98,18 @@ class SmartMirrorGUI(QWidget):
 
     def initSchedule(self):
         # get schedules from server or google calendar
-        self.scheWidget = QWidget()
-        vlayout = QVBoxLayout()
-        self.scheWidget.setLayout(vlayout)
-
-        self.scheLB = [QLabel("1"), QLabel("2"), QLabel("3")]
-        
-        for i in range(3):
-            #self.scheLB[i] = QLabel("hihi")
-            self.scheLB[i].setStyleSheet('color: white')
-            self.scheLB[i].setFont(QFont("", 20, QFont.Bold))
-            self.scheLB[i].setFixedSize(self.width()/100*40, self.height()/100*6)
-            self.scheLB[i].move(self.width()/100, self.height()/100*(76+i*6))
-            self.scheLB[i].setAutoFillBackground(True)
-            p = self.scheLB[i].palette()
-            p.setColor(self.scheLB[i].backgroundRole(), Qt.black)
-            self.scheLB[i].setPalette(p)
-            self.scheLB[i].setAlignment(Qt.AlignVCenter)
-            self.scheWidget.layout().addChildWidget(self.scheLB[i])
-            self.scheLB[i].setVisible(False)
-
-        #self.scheWidget.setVisible(True)
-        self.layout().addChildWidget(self.scheWidget)
-        self.layout().addChildWidget(self.scheLB[0])
-        self.layout().addChildWidget(self.scheLB[1])
-        self.layout().addChildWidget(self.scheLB[2])
-        
+        self.scheLB = QLabel("")
+        self.scheLB.setStyleSheet('color: white')
+        self.scheLB.setFont(QFont("", 20, QFont.Bold))
+        self.scheLB.setFixedSize(self.width()/100*40, self.height()/100*18)
+        self.scheLB.move(self.width()/100, self.height()/100*78)
+        self.scheLB.setAutoFillBackground(True)
+        p = self.scheLB.palette()
+        p.setColor(self.scheLB.backgroundRole(), Qt.black)
+        self.scheLB.setPalette(p)
+        self.scheLB.setAlignment(Qt.AlignVCenter)
+        self.layout().addChildWidget(self.scheLB)
+        self.scheLB.setVisible(False)
 
     def controlView(self, alarm_dict):
         activity = list(alarm_dict.keys())[0]
@@ -99,15 +118,12 @@ class SmartMirrorGUI(QWidget):
         if activity == 'NewsActivity':
             self.newsLB.setVisible(flag)
         elif activity == 'CalendarActivity':
-            self.scheLB[0].setVisible(flag)
-            self.scheLB[1].setVisible(flag)
-            self.scheLB[2].setVisible(flag)
+            self.scheLB.setVisible(flag)
         elif activity == 'PathActivity':
             if self.webView is not None:
                 self.webView.setVisible(flag)
         elif activity == 'MusicActivity':
-            self.musicLB[0].setVisible(flag)
-            self.musicLB[1].setVisible(flag)
+            self.musicLB.setVisible(flag)
         elif activity == 'WeatherActivity':
             self.weatherWidget.setVisible(flag)
         else:
@@ -208,42 +224,20 @@ class SmartMirrorGUI(QWidget):
         # get music file or information
 
         #self.playlist = self.wc.get_playlist()
-        self.playlist = []
-
-        musicLB = []
-        titleLB = QLabel("")
-        if self.playlist is not None and len(self.playlist) > 0:
-            titleLB.setText("♬ " + self.playlist[0][0])
-        titleLB.setStyleSheet('color: white')
-        titleLB.setFont(QFont("", 25, QFont.Bold))
-        titleLB.setFixedSize(self.width()/100*30, self.height()/100*6)
-        titleLB.move(self.width()/100*35, self.height()/100*3)
-        titleLB.setAutoFillBackground(True)
-        p = titleLB.palette()
-        p.setColor(titleLB.backgroundRole(), Qt.black)
-        titleLB.setPalette(p)
-        titleLB.setAlignment(Qt.AlignHCenter)
-        musicLB.append(titleLB)
-
-        artistLB = QLabel("")
-        if self.playlist is not None and len(self.playlist) > 0:
-            artistLB.setText(self.playlist[0][1])
-        artistLB.setStyleSheet('color: white')
-        artistLB.setFont(QFont("", 22, QFont.Bold))
-        artistLB.setFixedSize(self.width()/100*30, self.height()/100*6)
-        artistLB.move(self.width()/100*35, self.height()/100*9)
-        artistLB.setAutoFillBackground(True)
-        p = artistLB.palette()
-        p.setColor(artistLB.backgroundRole(), Qt.black)
-        artistLB.setPalette(p)
-        artistLB.setAlignment(Qt.AlignHCenter)
-        musicLB.append(artistLB)
+        musicLB = QLabel("")
+        musicLB.setStyleSheet('color: white')
+        musicLB.setFont(QFont("", 25, QFont.Bold))
+        musicLB.setFixedSize(self.width()/100*30, self.height()/100*12)
+        musicLB.move(self.width()/100*35, self.height()/100*3)
+        musicLB.setAutoFillBackground(True)
+        p = musicLB.palette()
+        p.setColor(musicLB.backgroundRole(), Qt.black)
+        musicLB.setPalette(p)
+        musicLB.setAlignment(Qt.AlignHCenter)
 
         self.musicLB = musicLB
-        self.layout().addChildWidget(self.musicLB[0])
-        self.layout().addChildWidget(self.musicLB[1])
-        self.musicLB[0].setVisible(False)
-        self.musicLB[1].setVisible(False)
+        self.layout().addChildWidget(self.musicLB)
+        self.musicLB.setVisible(False)
 
     def initDatetime(self):
         dt = datetime.datetime.now()
@@ -326,6 +320,32 @@ class SmartMirrorGUI(QWidget):
 
     def setNews(self, text):
         self.newsLB.setText(text)
+
+    def setMusic(self, music):
+        self.musicLB.setText(music)
+        self.musicLB.setVisible(True)
+
+    def setSchedule(self, schedules):
+        sche = ""
+        if schedules is not None:
+            schedules = sorted(schedules.items())
+            dt = datetime.datetime.now()
+
+            for i in range(len(schedules)):
+                if int(schedules[i][0][:2]+schedules[i][0][3:]) >= dt.hour*100+dt.minute:
+                    schedules = schedules[i:]
+                    break
+            length = len(schedules)
+
+            for i in range(3-length):
+                sche += '\n'
+
+            if length > 3:
+                length = 3
+            for i in range(length):
+                sche += (str(schedules[i][0]) + " " + str(schedules[i][1]) + '\n')
+
+        self.scheLB.setText(sche)
 
     def updateDatetime(self):
         while(True):

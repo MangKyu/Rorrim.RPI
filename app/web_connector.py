@@ -90,20 +90,43 @@ class WebConnector:
 
         return location
 
-    def get_mp3_file(self):
-        url = self.domain + "/download_mp3_file/"
-        fileName = 'a.mp3'
-        path = 'C:/Users/jaewook/Desktop/'
-        url_request = urllib.request.Request(url + fileName)
-        url_connect = urllib.request.urlopen(url_request)
-        with open(path + fileName, 'wb') as f:
-            while True:
-                buffer = url_connect.read(1024)
-                if not buffer: break
-                data_write = f.write(buffer)
-        url_connect.close()
+    def get_playlist(self, mirror_uid, user_uid):
+        url = self.domain + "/getPlayList?mirrorUid="+mirror_uid+"&uid="+user_uid
+        req = requests.get(url)
+        html = req.text
+        data = json.loads(html)
+        return data
 
-    def get_path(self, startX="126.9850380932383", startY="37.566567545861645", endX="127.10331814639885",
-                 endY="37.403049076341794"):
-        pass
+    def get_name(self, user_uid):
+        url = self.domain + "/getName?uid="+user_uid
+        req = requests.get(url)
+        html = req.text
+        return html
 
+    def get_music(self, mirror_uid, user_uid, fName):
+        url = self.domain + "/getMusicFile?mirrorUid="+mirror_uid+"&uid="+user_uid+"&fileName="+fName
+        if not os.path.exists('music'):
+            os.mkdir('music')
+        if not os.path.exists('music/'+user_uid):
+            os.mkdir('music/'+user_uid)
+        if os.path.exists('music/'+user_uid+"/"+fName):
+            return
+        f = open("music/"+user_uid+"/"+fName, 'wb')
+        print("download start")
+        req = requests.get(url)
+        f.write(req.content)
+        print("download ended")
+        f.close()
+        #html = req.text
+        #print(html)
+
+
+if __name__ == "__main__":
+    wc = WebConnector()
+    mirror_uid = "rorrim1234567890"
+    user_uid = "Xrb4lbiAAeUTiyMndUC1eLQWsKI3"
+    #playlist = wc.get_playlist(mirror_uid, user_uid)
+    #print(playlist)
+    #wc.get_music(mirror_uid, user_uid, "test.mp3")
+    #for i in playlist:
+    #    wc.get_music(mirror_uid, user_uid, playlist[i])

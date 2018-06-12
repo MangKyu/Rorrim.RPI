@@ -13,6 +13,7 @@ import sys
 import cv2
 import numpy as np
 import os
+import eyed3, pygame
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -29,10 +30,17 @@ class Mirror():
         speech_th = threading.Thread(target=self.listening)
         speech_th.daemon = True
         speech_th.start()
+        pygame.mixer.init()
         # we have to do => after login, socket connect should start
         self.connect()
         self.user_uid = None
+        self.user_name = ""
         self.sem = None
+        self.playlist = []
+        self.playlist_hash = {}
+        self.music_th = None
+        self.music_flag = False
+        self.music_next = False
         self.wc = web_connector.WebConnector()
         self.fm = firebase_manager.FirebaseManager(self.mirror_uid)
         self.news = self.wc.get_news(self.user_uid)
@@ -111,6 +119,14 @@ class Mirror():
                 print('send auth to server')
                 print(self.auth_flag)
                 # we have to do => show auth view
+            elif head =='/PLAYLIST':
+                if list(body.keys())[0] == "remove":
+                    if os.path.exists('music/'+self.user_uid+"/"+list(body.values())[0]):
+                        os.remove('music/'+self.user_uid+"/"+list(body.values())[0])
+                elif list(body.keys())[0] == "update":
+                    th = threading.Thread(target=self.wc.get_music, args=(self.mirror_uid, self.user_uid, list(body.values())[0]))
+                    th.daemon = True
+                    th.start()
             else:
                 pass
 
@@ -143,11 +159,15 @@ class Mirror():
 
     def login_success(self):
         self.wc.send_user_info(self.mirror_uid, self.user_uid)
-        self.user_uid = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
         loc = self.fm.get_location(self.user_uid)
-        loc = {'latitude':'37.5436631', 'longitude':'127.0773105'}
-        self.gui.setStartPoint(loc)
-        #print(self.user_uid)
+        if loc is not None:
+            self.gui.setStartPoint(loc)
+        sche = self.fm.get_schedule(self.user_uid, None)
+        self.gui.setSchedule(sche)
+        pl_th = threading.Thread(target=self.playlist_init)
+        pl_th.daemon = True
+        pl_th.start()
+        
         onoff = self.fm.get_onoff(self.user_uid)
         if onoff is None or type(onoff) is not dict:
             print("onoff : ", end="")
@@ -155,6 +175,20 @@ class Mirror():
             return
         for key in onoff:
             self.gui.controlView({key:onoff[key]})
+
+    def playlist_init(self):
+        self.playlist = self.wc.get_playlist(self.mirror_uid, self.user_uid)
+        self.playlist_hash = {}
+        if self.playlist is not None:
+            self.playlist = sorted(list(self.playlist.values()))
+            for i in self.playlist:
+                self.wc.get_music(self.mirror_uid, self.user_uid, i)
+                self.playlist_hash[i] = True
+        if os.path.exists('music/'+self.user_uid):
+            children = os.listdir('music/'+self.user_uid)
+            for i in children:
+                if not (i in self.playlist):
+                    os.remove('music/'+self.user_uid+'/'+i)
 
     def sign_out(self):
         # we have to do here => set everything false
@@ -171,6 +205,25 @@ class Mirror():
         playlist = []
         playlist.append(["What is Love?", "TWICE(트와이스)"])
         #return self.fm.get_playlist()
+
+    def play_music(self):
+        while self.music_flag:
+            for i in self.playlist:
+                if i in list(self.playlist_hash.keys()) and self.music_flag:
+                    pygame.mixer.music.load('music/'+self.user_uid+'/'+i)
+                    pygame.mixer.music.play(0)
+                    self.gui.setMusic(i)
+                    af = eyed3.load('music/'+self.user_uid+'/'+i)
+                    duration = af.info.time_secs
+                    start_time = time.time()
+                    while start_time+duration >= time.time() and self.music_flag:
+                        if self.music_next:
+                            self.music_next = False
+                            break
+                    pygame.mixer.music.stop()
+                elif not self.music_flag:
+                    break
+        self.gui.setMusic("")
 
     def get_schedule(self, uid=None):
         schedules = self.fm.get_schedule(self.user_uid)
@@ -202,27 +255,50 @@ class Mirror():
                 if self.flag is False:
                     return "EXIT"
                     break
-                elif re.search(r'\b로그인\b', transcript, re.I):
+                elif re.search(r'\b로그인\b', transcript, re.I) and self.user_uid is None:
                     self.cam_flag = True
+                    self.gui.setInfo(2)
                     self.sem.acquire()
                     self.user_uid = self.login_request()
                     if self.user_uid is not None:
+                        self.user_name = self.wc.get_name(self.user_uid)
+                        self.gui.setInfo(3,self.user_name)
                         self.login_success()
-                elif re.search(r'\b로그아웃\b', transcript, re.I):
+                        time.sleep(1)
+                        self.gui.setInfo(0)
+                elif re.search(r'\b로그아웃\b', transcript, re.I) and self.user_uid is not None:
+                    self.gui.setInfo(4,self.user_name)
                     self.sign_out()
-                elif re.search(r'\b노래 틀어줘\b', transcript, re.I):
+                    time.sleep(2)
+                    self.user_name = ""
+                    self.gui.setInfo(0)
+                elif re.search(r'\b노래 틀어\b', transcript, re.I):
                     # we have to do => play music
-                    pass
+                    if not self.music_flag and self.playlist_hash is not None and len(self.playlist_hash) > 0:
+                        self.music_flag = True
+                        self.music_th = threading.Thread(target=self.play_music)
+                        self.music_th.daemon = True
+                        self.music_th.start()
+                elif re.search(r'\b노래 꺼\b', transcript, re.I):
+                    if self.music_flag:
+                        self.music_flag = False
+                        pygame.mixer.stop()
+                        self.gui.setMusic("")
                 elif re.search(r'\b다음 곡\b', transcript, re.I):
                     # we have to do => play music
-                    pass
-                elif re.search(r'\b이전 곡\b', transcript, re.I):
-                    # we have to do => play music
-                    pass
+                    if self.music_flag:
+                        self.music_next = True
                 elif re.search(r'\b가는 길\b', transcript, re.I) or re.search(r'\b가는길\b', transcript, re.I):
                     place = transcript[:re.search(r'\b가는\b', transcript, re.I).span()[0]]
+                    self.gui.setInfo(5,place)
                     geocode = self.wc.get_geocode(place)
                     self.gui.setPath(geocode)
+                    time.sleep(3)
+                    self.gui.setInfo(6)
+                    time.sleep(2)
+                    self.gui.setInfo(0)
+                elif re.search(r'\b지도 꺼\b', transcript, re.I):
+                    self.gui.webView.setVisible(False)
                 elif re.search(r'\b등록\b', transcript, re.I):
                     if self.timer_flag is True:
                         self.auth_flag = True
