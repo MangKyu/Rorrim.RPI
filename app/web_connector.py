@@ -103,6 +103,7 @@ class WebConnector:
         html = req.text
         return html
 
+    '''
     def get_music(self, mirror_uid, user_uid, fName):
         url = self.domain + "/getMusicFile?mirrorUid="+mirror_uid+"&uid="+user_uid+"&fileName="+fName
         if not os.path.exists('music'):
@@ -119,12 +120,34 @@ class WebConnector:
         f.close()
         #html = req.text
         #print(html)
+    '''
 
+    def get_music(self, mirror_uid, user_uid, fName, playlist=None, playlist_hash=None):
+        url = self.domain + "/getMusicFile?mirrorUid="+mirror_uid+"&uid="+user_uid+"&fileName="+fName
+        if not os.path.exists('music'):
+            os.mkdir('music')
+        if not os.path.exists('music/'+user_uid):
+            os.mkdir('music/'+user_uid)
+        if os.path.exists('music/'+user_uid+'/'+fName):
+            return
+        print('download start')
+        downloaded = 0
+        req = requests.get(url, stream=True)
+        with open('music/'+user_uid+'/'+fName, 'wb') as f:
+            for chunk in req.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+            f.close()
+        print('download finish')
+        if playlist is not None and playlist_hash is not None:
+            playlist.append(fName)
+            playlist_hash[fName] = True
 
 if __name__ == "__main__":
     wc = WebConnector()
     mirror_uid = "rorrim1234567890"
     user_uid = "Xrb4lbiAAeUTiyMndUC1eLQWsKI3"
+    wc.get_music(mirror_uid, user_uid, 'abc.mp3')
     #playlist = wc.get_playlist(mirror_uid, user_uid)
     #print(playlist)
     #wc.get_music(mirror_uid, user_uid, "test.mp3")

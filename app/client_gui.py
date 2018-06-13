@@ -46,7 +46,8 @@ class SmartMirrorGUI(QWidget):
         self.dt_th.start()
 
     def initInfo(self):
-        self.infoLB = QLabel("Welcome, I'm Rorrim")
+        #self.infoLB = QLabel("Welcome, I'm Rorrim")
+        self.infoLB = QLabel("")
         self.infoLB.setStyleSheet('color: white')
         self.infoLB.setFont(QFont("", 45, QFont.Bold))
         self.infoLB.setFixedSize(self.width(), self.height()/100*30)
@@ -63,7 +64,8 @@ class SmartMirrorGUI(QWidget):
         if info_num == 0:
             self.infoLB.setText("")
         elif info_num == 1:   #welcome
-            self.infoLB.setText("Welcome, I'm Rorrim")
+            #self.infoLB.setText("Welcome, I'm Rorrim")
+            self.infoLB.setText(text)
         elif info_num == 2: #trying to login
             self.infoLB.setText("얼굴인식 시도 중")
         elif info_num == 3: #login success
@@ -76,6 +78,8 @@ class SmartMirrorGUI(QWidget):
             self.infoLB.setText("길찾기 완료")
         elif info_num == 7:
             self.infoLB.setText("길찾기 정보 없음")
+        elif info_num == 8:
+            self.infoLB.setText("로그인 실패")
 
     def initPath(self):
         self.webView = QWebView(self)
@@ -167,22 +171,22 @@ class SmartMirrorGUI(QWidget):
 
         self.imgLB = QLabel()
         img = QPixmap("weather_img/sunny-day.png")
-        img.scaledToWidth(5, Qt.FastTransformation)
-        img = img.scaledToWidth(self.width()/100*5)
+        img.scaledToWidth(self.width()/100*7, Qt.FastTransformation)
+        img = img.scaledToWidth(self.width()/100*7, Qt.FastTransformation)
         self.imgLB.setPixmap(img)
         self.imgLB.setFixedSize(img.width(), img.height())
-        self.imgLB.move(self.width()/100*2, self.height()/100*1)
+        self.imgLB.move(self.width()/100*1, self.height()/100*1)
         self.imgLB.setAutoFillBackground(True)
         p = self.imgLB.palette()
         p.setColor(self.imgLB.backgroundRole(), Qt.black)
         self.imgLB.setPalette(p)
-        self.imgLB.setAlignment(Qt.AlignCenter)
+        self.imgLB.setAlignment(Qt.AlignVCenter)
 
         self.tempLB = QLabel("")
         self.tempLB.setStyleSheet('color: white')
-        self.tempLB.setFont(QFont("", 30, QFont.Bold))
-        self.tempLB.setFixedSize(self.width()/100*8, img.height())
-        self.tempLB.move(self.width()/100*2+img.width(), self.height()/100*1)
+        self.tempLB.setFont(QFont("", 35, QFont.Bold))
+        self.tempLB.setFixedSize(self.width()/100*10, img.height())
+        self.tempLB.move(self.width()/100*1+img.width(), self.height()/100*1)
         self.tempLB.setAutoFillBackground(True)
         p = self.tempLB.palette()
         p.setColor(self.tempLB.backgroundRole(), Qt.black)
@@ -195,24 +199,24 @@ class SmartMirrorGUI(QWidget):
         self.locLB.setStyleSheet('color: white')
         self.locLB.setFont(QFont("", 20, QFont.Bold))
         self.locLB.setFixedSize(self.width()/100*20, self.height()/100*5)
-        self.locLB.move(self.width()/100, self.height()/100*1+img.height())
+        self.locLB.move(self.width()/100*1, self.height()/100*1+img.height())
         self.locLB.setAutoFillBackground(True)
         p = self.locLB.palette()
         p.setColor(self.locLB.backgroundRole(), Qt.black)
         self.locLB.setPalette(p)
-        self.locLB.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        self.locLB.setAlignment(Qt.AlignVCenter)
 
         #mmLB = QLabel("▲"+str(weather_info["max_tem"])[:-2]+"˚C ▼"+str(weather_info["min_tem"])[:-2]+"˚C")
         self.mmLB = QLabel("")
         self.mmLB.setStyleSheet('color: white')
         self.mmLB.setFont(QFont("", 20, QFont.Bold))
         self.mmLB.setFixedSize(self.width()/100*20, self.height()/100*5)
-        self.mmLB.move(self.width()/100, self.height()/100*7 + img.height())
+        self.mmLB.move(self.width()/100*1, self.height()/100*7 + img.height())
         self.mmLB.setAutoFillBackground(True)
         p = self.mmLB.palette()
         p.setColor(self.mmLB.backgroundRole(), Qt.black)
         self.mmLB.setPalette(p)
-        self.mmLB.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+        self.mmLB.setAlignment(Qt.AlignVCenter)
 
         self.weatherWidget.layout().addChildWidget(self.imgLB)
         self.weatherWidget.layout().addChildWidget(self.tempLB)
@@ -227,13 +231,13 @@ class SmartMirrorGUI(QWidget):
         musicLB = QLabel("")
         musicLB.setStyleSheet('color: white')
         musicLB.setFont(QFont("", 25, QFont.Bold))
-        musicLB.setFixedSize(self.width()/100*30, self.height()/100*12)
-        musicLB.move(self.width()/100*35, self.height()/100*3)
+        musicLB.setFixedSize(self.width()/100*54, self.height()/100*12)
+        musicLB.move(self.width()/100*23, self.height()/100*3)
         musicLB.setAutoFillBackground(True)
         p = musicLB.palette()
         p.setColor(musicLB.backgroundRole(), Qt.black)
         musicLB.setPalette(p)
-        musicLB.setAlignment(Qt.AlignHCenter)
+        musicLB.setAlignment(Qt.AlignVCenter)
 
         self.musicLB = musicLB
         self.layout().addChildWidget(self.musicLB)
@@ -245,18 +249,29 @@ class SmartMirrorGUI(QWidget):
         weekday = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         month = ["December", "January", "February", "March", "April", "May", "June", "July", "August", "September",
                  "October", "November", "December"]
-        d = weekday[dt.weekday()] + ", " + month[dt.month] + " " + str(dt.day) + " " + str(dt.year)
+        d = month[dt.month] + " " + str(dt.day) + " " + str(dt.year)
 
         dateLB = QLabel(d)
         dateLB.setStyleSheet('color: white')
         dateLB.setFont(QFont("", 21, QFont.Bold))
-        dateLB.setFixedSize(self.width()/100*33, self.height()/100*6)
-        dateLB.move(self.width()/100*65, self.height()/100*3)
+        dateLB.setFixedSize(self.width()/100*20, self.height()/100*6)
+        dateLB.move(self.width()/100*78, self.height()/100*3)
         dateLB.setAutoFillBackground(True)
         p = dateLB.palette()
         p.setColor(dateLB.backgroundRole(), Qt.black)
         dateLB.setPalette(p)
         dateLB.setAlignment(Qt.AlignRight)
+
+        weekLB = QLabel(weekday[dt.weekday()])
+        weekLB.setStyleSheet('color: white')
+        weekLB.setFont(QFont("", 21, QFont.Bold))
+        weekLB.setFixedSize(self.width()/100*20, self.height()/100*6)
+        weekLB.move(self.width()/100*78, self.height()/100*9)
+        weekLB.setAutoFillBackground(True)
+        p = weekLB.palette()
+        p.setColor(weekLB.backgroundRole(), Qt.black)
+        weekLB.setPalette(p)
+        weekLB.setAlignment(Qt.AlignRight)
 
         t = str(dt)[11:16]
         if dt.hour > 12:
@@ -266,8 +281,8 @@ class SmartMirrorGUI(QWidget):
         timeLB = QLabel(t)
         timeLB.setStyleSheet('color: white')
         timeLB.setFont(QFont("", 30, QFont.Bold))
-        timeLB.setFixedSize(self.width()/100*33, self.height()/100*8)
-        timeLB.move(self.width()/100*65, self.height()/100*9)
+        timeLB.setFixedSize(self.width()/100*20, self.height()/100*8)
+        timeLB.move(self.width()/100*78, self.height()/100*15)
         timeLB.setAutoFillBackground(True)
         p = timeLB.palette()
         p.setColor(timeLB.backgroundRole(), Qt.black)
@@ -275,8 +290,10 @@ class SmartMirrorGUI(QWidget):
         timeLB.setAlignment(Qt.AlignRight | Qt.AlignTop)
 
         self.timeLB = timeLB
+        self.weekLB = weekLB
         self.dateLB = dateLB
         self.layout().addChildWidget(self.dateLB)
+        self.layout().addChildWidget(self.weekLB)
         self.layout().addChildWidget(self.timeLB)
 
     def setWeather(self, weather_info):
@@ -308,8 +325,8 @@ class SmartMirrorGUI(QWidget):
         elif weather_info['cur_sky'] == "Snowy":
             img = QPixmap("weather_img/snow.png")
 
-        img.scaledToWidth(10, Qt.FastTransformation)
-        img = img.scaledToWidth(self.width() / 100 * 5)
+        img.scaledToWidth(7, Qt.FastTransformation)
+        img = img.scaledToWidth(self.width() / 100 * 7, Qt.FastTransformation)
         self.imgLB.setPixmap(img)
 
         self.tempLB.setText(str(weather_info['cur_tem']) + "˚C")
@@ -355,13 +372,14 @@ class SmartMirrorGUI(QWidget):
                 weekday = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
                 month = ["December", "January", "February", "March", "April", "May", "June", "July", "August", "September",
                          "October", "November", "December"]
-                d = weekday[dt.weekday()] + ", " + month[dt.month] + " " + str(dt.day) + " " + str(dt.year)
+                d = month[dt.month] + " " + str(dt.day) + " " + str(dt.year)
                 t = str(dt)[11:16]
                 if dt.hour > 12:
                     t = t + " PM"
                 else:
                     t = t + " AM"
                 self.dateLB.setText(d)
+                self.weekLB.setText(weekday[dt.weekday()])
                 self.timeLB.setText(t)
                 time.sleep(1)
             except:

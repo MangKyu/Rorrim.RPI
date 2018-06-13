@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import os
 import eyed3, pygame
+import random
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -38,6 +39,7 @@ class Mirror():
         self.sem = None
         self.playlist = []
         self.playlist_hash = {}
+        self.now_playing = ""
         self.music_th = None
         self.music_flag = False
         self.music_next = False
@@ -102,33 +104,51 @@ class Mirror():
 
     def receive_msg(self):
         while self.flag:
-            head, body = self.analyze_msg()
-            print(head)
-            print(body)
-            if head == '/WEATHER':
-                self.gui.setWeather(body)
-            elif head == '/NEWS':
-                self.news = self.wc.get_news(self.user_uid)
-            elif head == '/SWITCH':
-                self.gui.controlView(body)
-            elif head =='/AUTH':
-                self.auth_flag = False
-                self.timer_flag = True
-                auth_dict = self.authenticate()
-                self.send_msg(auth_dict)
-                print('send auth to server')
-                print(self.auth_flag)
+            data = self.analyze_msg()
+            if data is not None:
+                head, body = data
+                print(head)
+                print(body)
+                if head == '/WEATHER':
+                    self.gui.setWeather(body)
+                elif head == '/NEWS':
+                    self.news = self.wc.get_news(self.user_uid)
+                elif head == '/SWITCH':
+                    self.gui.controlView(body)
+                elif head =='/AUTH':
+                    self.auth_flag = False
+                    self.timer_flag = True
+                    auth_dict = self.authenticate()
+                    self.send_msg(auth_dict)
+                    print('send auth to server')
+                    print(self.auth_flag)
                 # we have to do => show auth view
-            elif head =='/PLAYLIST':
-                if list(body.keys())[0] == "remove":
-                    if os.path.exists('music/'+self.user_uid+"/"+list(body.values())[0]):
-                        os.remove('music/'+self.user_uid+"/"+list(body.values())[0])
-                elif list(body.keys())[0] == "update":
-                    th = threading.Thread(target=self.wc.get_music, args=(self.mirror_uid, self.user_uid, list(body.values())[0]))
-                    th.daemon = True
-                    th.start()
-            else:
-                pass
+                elif head =='/PLAYLIST':
+                    if list(body.keys())[0] == "remove":
+                        if os.path.exists('music/'+self.user_uid+"/"+list(body.values())[0]):
+                            if list(body.values())[0] == self.now_playing:
+                                self.music_next = True
+                                time.sleep(0.5)
+                            os.remove('music/'+self.user_uid+"/"+list(body.values())[0])
+                            if list(body.values())[0] in self.playlist:
+                                self.playlist.remove(list(body.values())[0])
+                                self.playlist_hash[list(body.values())[0]] = False
+                            #self.playlist = self.wc.get_playlist(self.mirror_uid, self.user_uid)
+                            #self.playlist = sorted(list(self.playlist.values()))
+                            #self.playlist_hash = {}
+                            #for i in self.playlist:
+                            #    self.playlist_hash[i] = True
+                            #self.playlist.remove(self.playlist.index(list(body.values())[0]))
+                            #self.playlist_hash[list(body.values())[0]] = False
+                            print(self.playlist)
+                            print(self.playlist_hash)
+                    elif list(body.keys())[0] == "update":
+                        th = threading.Thread(target=self.wc.get_music, args=(self.mirror_uid, self.user_uid, list(body.values())[0], self.playlist, self.playlist_hash))
+                        #th = threading.Thread(target=self.playlist_init)
+                        th.daemon = True
+                        th.start()
+                else:
+                    pass
 
     def authenticate(self):
         start = time.time()
@@ -155,6 +175,7 @@ class Mirror():
 
     def login_request(self):
         user_uid = self.wc.login(self.mirror_uid)
+        #user_uid = 'Xrb4lbiAAeUTiyMndUC1eLQWsKI3'
         return user_uid
 
     def login_success(self):
@@ -177,6 +198,7 @@ class Mirror():
             self.gui.controlView({key:onoff[key]})
 
     def playlist_init(self):
+        print('playlist init() start')
         self.playlist = self.wc.get_playlist(self.mirror_uid, self.user_uid)
         self.playlist_hash = {}
         if self.playlist is not None:
@@ -189,6 +211,7 @@ class Mirror():
             for i in children:
                 if not (i in self.playlist):
                     os.remove('music/'+self.user_uid+'/'+i)
+        print('playlist init() finished')
 
     def sign_out(self):
         # we have to do here => set everything false
@@ -209,9 +232,11 @@ class Mirror():
     def play_music(self):
         while self.music_flag:
             for i in self.playlist:
-                if i in list(self.playlist_hash.keys()) and self.music_flag:
+                print(i)
+                if i in list(self.playlist_hash.keys()) and self.playlist_hash[i] and self.music_flag:
                     pygame.mixer.music.load('music/'+self.user_uid+'/'+i)
                     pygame.mixer.music.play(0)
+                    self.now_playing = i
                     self.gui.setMusic(i)
                     af = eyed3.load('music/'+self.user_uid+'/'+i)
                     duration = af.info.time_secs
@@ -228,6 +253,13 @@ class Mirror():
     def get_schedule(self, uid=None):
         schedules = self.fm.get_schedule(self.user_uid)
         return schedules
+
+    def voice_response(self, msg=None):
+        if msg is None:
+            return
+        self.gui.setInfo(1, msg);
+        time.sleep(2.5)
+        self.gui.setInfo(0)
 
     def listen_print_loop(self, responses):
         num_chars_printed = 0
@@ -255,6 +287,35 @@ class Mirror():
                 if self.flag is False:
                     return "EXIT"
                     break
+                elif re.search(r'\b안녕\b', transcript, re.I):
+                    self.voice_response("안녕하세요")
+                elif re.search(r'\b사랑해\b', transcript, re.I):
+                    self.voice_response("저두요")
+                elif re.search(r'\b배고파\b', transcript, re.I):
+                    r = random.randint(0,100)
+                    food = ""
+                    if r <= 10:
+                        self.voice_response("다이어트나 하세요!")
+                    else:
+                        if r <= 20:
+                            food = "치킨"
+                        elif r <= 30:
+                            food = "피자"
+                        elif r <= 40:
+                            food = "햄버거"
+                        elif r <= 50:
+                            food = "떡볶이"
+                        elif r <= 60:
+                            food = "족발"
+                        elif r <= 70:
+                            food = "스테이크"
+                        elif r <= 80:
+                            food = "짜장면"
+                        elif r <= 90:
+                            food = "카레"
+                        else:
+                            food = "라멘"
+                        self.voice_response(food+" 어때요?")
                 elif re.search(r'\b로그인\b', transcript, re.I) and self.user_uid is None:
                     self.cam_flag = True
                     self.gui.setInfo(2)
@@ -266,38 +327,44 @@ class Mirror():
                         self.login_success()
                         time.sleep(1)
                         self.gui.setInfo(0)
+                    else:
+                        self.sem.release()
+                        self.gui.setInfo(8)
+                        self.cam_flag = False
+                        time.sleep(2)
+                        self.gui.setInfo(0)
                 elif re.search(r'\b로그아웃\b', transcript, re.I) and self.user_uid is not None:
                     self.gui.setInfo(4,self.user_name)
                     self.sign_out()
                     time.sleep(2)
                     self.user_name = ""
                     self.gui.setInfo(0)
-                elif re.search(r'\b노래 틀어\b', transcript, re.I):
+                elif re.search(r'\b노래 틀어\b', transcript, re.I) or re.search(r'\b노래 재생\b',transcript, re.I) or re.search(r'\b노래 켜\b',transcript,re.I) or re.search(r'\b노래 시작\b', transcript, re.I):
                     # we have to do => play music
                     if not self.music_flag and self.playlist_hash is not None and len(self.playlist_hash) > 0:
                         self.music_flag = True
                         self.music_th = threading.Thread(target=self.play_music)
                         self.music_th.daemon = True
                         self.music_th.start()
-                elif re.search(r'\b노래 꺼\b', transcript, re.I):
+                elif re.search(r'\b노래 꺼\b', transcript, re.I) or re.search(r'\b노래 그만\b', transcript, re.I) or re.search(r'\b노래 종료\b', transcript, re.I) or re.search(r'\b노래 정지\b', transcript, re.I):
                     if self.music_flag:
                         self.music_flag = False
                         pygame.mixer.stop()
                         self.gui.setMusic("")
-                elif re.search(r'\b다음 곡\b', transcript, re.I):
+                elif re.search(r'\b다음 곡\b', transcript, re.I) or re.search(r'\b다음 노래\b', transcript, re.I):
                     # we have to do => play music
                     if self.music_flag:
                         self.music_next = True
-                elif re.search(r'\b가는 길\b', transcript, re.I) or re.search(r'\b가는길\b', transcript, re.I):
+                elif re.search(r'\b가는 길\b', transcript, re.I) or re.search(r'\b가는길\b', transcript, re.I) or re.search(r'\b가는 방법\b', transcript, re.I):
                     place = transcript[:re.search(r'\b가는\b', transcript, re.I).span()[0]]
                     self.gui.setInfo(5,place)
                     geocode = self.wc.get_geocode(place)
                     self.gui.setPath(geocode)
-                    time.sleep(3)
+                    time.sleep(1)
                     self.gui.setInfo(6)
                     time.sleep(2)
                     self.gui.setInfo(0)
-                elif re.search(r'\b지도 꺼\b', transcript, re.I):
+                elif re.search(r'\b지도 꺼\b', transcript, re.I) or re.search(r'\b지도 종료\b', transcript, re.I):
                     self.gui.webView.setVisible(False)
                 elif re.search(r'\b등록\b', transcript, re.I):
                     if self.timer_flag is True:
